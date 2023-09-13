@@ -14,11 +14,32 @@ cpu3 runing on bare metal
 2.  xxxx
 3.  xxxx
 
-#### 使用说明
+#### 测试
+```
+[root@imx6q /usr/local/app]# ls
+SW_APP.out    cpu3_app.bin  cpu3_app.elf
+[root@imx6q /usr/local/app]# ./SW_APP.out &
+[root@imx6q /usr/local/app]# App start ...
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+load /usr/local/app/cpu3_app.elf to Stream buf , size 425024.
+Loading ELF headering
+Loading ELF program headering
+Loading ELF section header.
+Loading ELF shstrtab.
+load cpu3 app to Stream buf , size 135648.
+load /usr/local/app/cpu3_app.bin success .
+cpu3 entry addr:0x78000000,entry arg:0x7801f894
+cpu3 power on
+cpu3 soft uart addr:0x780211d8
+CPU3 SoftUartInit Vir addr: 0xb64371d8
+softuart thread start ...
+CPU3: [-CPU3-]:Build Time:Sep 14 2023-07:29:20.
+CPU3: [-CPU3-]:run times:0x00000000.
+CPU3: [-CPU3-]:run times:0x00000001.
+CPU3: [-CPU3-]:run times:0x00000002.
+CPU3: [-CPU3-]:run times:0x00000003.
+CPU3: [-CPU3-]:run times:0x00000004.
+```
 
 #### 参与贡献
 
