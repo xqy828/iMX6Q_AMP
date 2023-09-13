@@ -1,8 +1,8 @@
 # imx6q_amp
 
 #### 介绍
-cpu0-cpu2 runing on linux
-cpu3 runing on bare metal
+cpu0-cpu2 runing on linux  
+cpu3 runing on bare metal  
 
 #### 软件架构
 软件架构说明
