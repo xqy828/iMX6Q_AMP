@@ -21,7 +21,7 @@ Bare-metal applications on cpu3**
 
 #### 软件架构
 软件架构说明
-
+![输入图片说明](doc/software_architecture.png)
 
 #### 安装教程
 
