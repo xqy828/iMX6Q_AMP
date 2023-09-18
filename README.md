@@ -1,21 +1,23 @@
 # imx6q_amp
 
 #### 介绍
-imx6q amp  
+## imx6q amp simplified version    
 
-Linux on cpu0-cpu2  
-Bare-metal applications on cpu3   
+ **Linux on cpu0-cpu2  
+Bare-metal applications on cpu3**    
 
-Hardware development platform: Raspberry Pi 4B  
-Software development tools:  
-arm-none-eabi-gcc gcc version 12.3.1 20230626 (Arm GNU Toolchain 12.3.Rel1 (Build arm-12.35))  
-arm-none-linux-gnueabihf-gcc gcc version 12.3.1 20230626 (Arm GNU Toolchain 12.3.Rel1 (Build arm-12.35))  
-
-Reference Documents:  
-<<i.MX 6Dual/6Quad Applications Processor Reference Manual>>  
-
-Reference code:  
-iMX6_Platform_SDK  
+### Development platform:  
+ Raspberry Pi 4B   
+### Software development tools:  
+ arm-none-eabi-gcc gcc version 12.3.1 20230626 (Arm GNU Toolchain 12.3.Rel1 (Build arm-12.35))    
+ arm-none-linux-gnueabihf-gcc gcc version 12.3.1 20230626 (Arm GNU Toolchain 12.3.Rel1 (Build arm-12.35))   
+### Reference Documents:  
+ <<i.MX 6Dual/6Quad Applications Processor Reference Manual>>   
+### Reference code:  
+ iMX6_Platform_SDK  
+### Development board:  
+![输入图片说明](doc/e9v2.jpg)
+![输入图片说明](doc/e9v2_1.jpg)
 
 #### 软件架构
 软件架构说明
