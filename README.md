@@ -1,7 +1,7 @@
-# imx6q_amp
+# imx6q amp
 
-#### 介绍
-## imx6q amp simplified version    
+### Project Title
+imx6q amp simplified version    
 
  **Linux on cpu0-cpu2  
 Bare-metal applications on cpu3**    
@@ -19,17 +19,11 @@ Bare-metal applications on cpu3**
 ![输入图片说明](doc/e9v2.jpg)
 ![输入图片说明](doc/e9v2_1.jpg)
 
-#### 软件架构
-软件架构说明
+### Software architecture
+
 ![输入图片说明](doc/software_architecture.png)
 
-#### 安装教程
-
-1.  xxxx
-2.  xxxx
-3.  xxxx
-
-#### 测试
+### Test
 ```
 [root@imx6q /usr/local/app]# ls
 SW_APP.out    cpu3_app.bin  cpu3_app.elf
