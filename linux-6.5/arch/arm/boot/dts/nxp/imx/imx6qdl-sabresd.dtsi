@@ -14,7 +14,7 @@
 
 	memory@10000000 {
 		device_type = "memory";
-		reg = <0x10000000 0x80000000>;
+		reg = <0x10000000 0x78000000>;//2048-128M
 	};
 
 	reg_usb_otg_vbus: regulator-usb-otg-vbus {
