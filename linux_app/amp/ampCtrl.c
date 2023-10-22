@@ -394,7 +394,6 @@ U32 Cpu3Elf2Bin(void)
     Elf32_Addr lastvaddr_32 = 0;    
     Elf64_Addr lastvaddr_64 = 0;
 
-    U32 ulPtLoadCnt = 0;
     if (elf_is_64(gCpu3AppElfData) == 0)
     {
         elf32info = gelf32_info;
@@ -402,14 +401,8 @@ U32 Cpu3Elf2Bin(void)
         {
             if(segment_32->p_type == PT_LOAD)
             {
-                if(ulPtLoadCnt == 0)
-                {
-                    lastvaddr_32 = segment_32->p_vaddr;
-                }
-                memcpy(gCpu3AppBinData + ulRdCnt+segment_32->p_vaddr - lastvaddr_32,gCpu3AppElfData + segment_32->p_offset,segment_32->p_filesz);
+                memcpy(gCpu3AppBinData + ulRdCnt,gCpu3AppElfData + segment_32->p_offset,segment_32->p_filesz);
                 ulRdCnt +=segment_32->p_filesz;
-                lastvaddr_32 = segment_32->p_vaddr;
-                ulPtLoadCnt++;
             }
         }
     }
@@ -420,14 +413,8 @@ U32 Cpu3Elf2Bin(void)
         {
             if(segment_64->p_type == PT_LOAD)
             {
-                if(ulPtLoadCnt == 0)
-                {
-                    lastvaddr_64 = segment_64->p_vaddr;
-                }
-                memcpy(gCpu3AppBinData + ulRdCnt+segment_64->p_vaddr - lastvaddr_64,gCpu3AppElfData + segment_64->p_offset,segment_64->p_filesz);
+                memcpy(gCpu3AppBinData + ulRdCnt,gCpu3AppElfData + segment_64->p_offset,segment_64->p_filesz);
                 ulRdCnt +=segment_64->p_filesz;
-                lastvaddr_64 = segment_64->p_vaddr;
-                ulPtLoadCnt++;
             }
         }
     }
@@ -447,7 +434,7 @@ U32 Cpu3_Load(void)
         printf("%s file load abnormal !\n",Cpu3AppElfName);
         return RET_NOK;
     }
-/*
+
     ulRdCnt = Cpu3Elf2Bin();
     if(ulRdCnt == 0)
     {
@@ -455,7 +442,7 @@ U32 Cpu3_Load(void)
         return RET_NOK;
     }
     printf("%s convert to bin success, bin size %d. \r\n",Cpu3AppElfName,ulRdCnt);
-*/
+/*
     if((slFileSize = FileSize(Cpu3AppBinName)) <= 0)
     {
         printf("%s file size: %d abnormal !\n",Cpu3AppBinName,slFileSize);
@@ -477,6 +464,9 @@ U32 Cpu3_Load(void)
     ulRdCnt = fread((char*)gKernelMmapCtrl.memCpu3PhyBase,1,slFileSize,pCpu3App);
     printf("load cpu3 app to Stream buf , size %d. \r\n",ulRdCnt);
     printf("load %s success .\r\n",Cpu3AppBinName);
+*/
+    memcpy((char*)gKernelMmapCtrl.memCpu3PhyBase,&gCpu3AppBinData,ulRdCnt);
+    printf("load cpu3 elf app success , size %d. \r\n",ulRdCnt);
     return RET_OK;
 }
 
