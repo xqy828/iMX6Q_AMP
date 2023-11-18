@@ -60,7 +60,7 @@ LIBC_INCLUDE += $(CC_PREFIX)/$(CROSS_COMPILE_STRIP)/include/c++/$(CC_VERSION)
 
 APPSRC_INCLUDE :=$(WORK_DIR)/apps/include
 
-LDFLAGS = -lc -lgcc
+LDFLAGS = -lc -lgcc -u _printf_float
 
 LDINC += -L '$(LIBGCC_LDPATH)' -L '$(LIBC_LDPATH)'
 

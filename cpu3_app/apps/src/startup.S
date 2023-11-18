@@ -37,12 +37,8 @@
 
     // External symbol references
     .global top_of_stacks
-    .global vectors
-    .global __ram_vectors_start
-    .global __ram_vectors_end
     .global __bss_start__
     .global __bss_end__
-    .global main
     .global _sys_exit
     
     .code 32
@@ -99,8 +95,29 @@ _start:
     msr     CPSR_c, #MODE_SVC | I_BIT | F_BIT
     mov     sp, r0
     sub     r0, r0, r1 
+
+   	/* init .bss */
+    /* clear the .bss section (zero init) */
+    ldr     r1,=__bss_start__
+    ldr     r2,=__bss_end__
+    mov     r3,#0
+1:  cmp     r1,r2
+    stmltia r1!,{r3}
+    blt     1b
+
+    @ take care of C++ static initialization. this won't cause any harm for plain C apps.
+    ldr     r12,=__libc_init_array
+    blx     r12
     
     bx      r4     @ for secondary cpus, jump to argument function pointer passed in by ROM
+    @ control should not return from the secondary cpu entry point
+    b       startup_exit
+    
+    startup_exit:
+    mov     r0,#0
+    ldr     r12,=_sys_exit
+    bx      r12
+    
     .cantunwind
     .fnend
     .endfunc    @ _start()

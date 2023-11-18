@@ -29,9 +29,14 @@ __attribute__ ((naked)) void mybkpt(void)
 
 int _fstat(int fd, struct stat * st)
 {
+    st->st_mode = S_IFCHR;
     return 0;
 }
 
+__attribute__((weak)) int _write(int fd,char *ptr,int len)
+{
+    return 0;
+} 
 
 int _wait(int *status)
 {
@@ -42,6 +47,29 @@ int _wait(int *status)
 pid_t _getpid()
 {
     return 1;
+}
+
+caddr_t _sbrk(int nbytes)
+{
+    static caddr_t heap_ptr = NULL;
+    caddr_t base;
+
+    if (heap_ptr == NULL)
+    {
+        heap_ptr = (caddr_t)&free_memory_start;
+    }
+
+    base = heap_ptr;
+    heap_ptr += nbytes;
+    
+    // Abort if we run out of memory.
+    if (heap_ptr > (caddr_t)&free_memory_end)
+    {
+        _write(1, "** Heap ran out of memory! **\n", 24);
+        abort();
+    }
+    
+    return base;
 }
 
 __attribute__ ((noreturn)) void _exit(int status)
@@ -55,16 +83,6 @@ int _kill(int pid, int sig)
     errno = EINVAL;
     return -1;
 }
-
-caddr_t _sbrk(int nbytes)
-{
-    return 0;
-}
-
-int _write(int fd,char *ptr,int len)
-{
-    return 0;
-} 
 
 int _read(int fd, char *buf, int nbytes)
 {
@@ -102,4 +120,32 @@ int _fork()
     errno = EAGAIN;
     return -1;
 }
+
+clock_t _times(struct tms *buf)
+{
+
+    return -1;
+}
+
+int _stat(const char *file,struct stat *st)
+{
+    st->st_mode = S_IFCHR;
+    return 0;
+}
+
+int _link(char *old, char *new)
+{
+    errno = EMLINK;
+    return -1;
+}
+
+int _unlink(char *name)
+{
+    errno = ENOENT;
+    return -1; 
+}
+
+
+
+
 

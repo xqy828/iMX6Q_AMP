@@ -15,11 +15,15 @@
 #include "ampCtrl.h"
 #include "kernelmap.h"
 
-char *str = "App start ... \n";
+char *str = "App start ...";
 extern int SoftUartInit();
+const char Date[12] = __DATE__;
+const char Time[9] = __TIME__;
+
 S32 main (void)
 {
-    printf("%s\n",str);
+    printf("\n%s\n",str);
+    printf("Build Time:%s-%s.\n",Date,Time);
     KernelMmapInit();
     InitCpu3();
     SoftUartInit();

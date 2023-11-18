@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include "public.h"
 __attribute__ ((section (".cpu3softuart")))  unsigned int softuart[2] = {[0 ... 1] = 0x0};
 
 #define COMM_TX_FLAG (softuart[0])
@@ -19,14 +20,6 @@ void myoutbyte(char c)
     myPutChar(c);
 }
 
-void my_print(const char *ptr)
-{
-    while(*ptr)
-    {
-        myoutbyte(*ptr++);
-    }
-}
-
 void delay_short(volatile unsigned int n)
 {
     while(n--)
@@ -43,20 +36,30 @@ void delay(volatile unsigned int n)
     }
 }
 
+int _write(int fd,char *ptr,int len)
+{
+    int i = 0;
+    UNUSED_PARA(fd);
+    for (i = 0; i < len; i++)
+    {
+        myoutbyte(*ptr);
+        ptr++;
+    }
+    return len;
+}
+
+double gdPi = 3.141592654;
 __attribute__ ((section (".cpu3main"))) void main(void)
 {
     const char Date[12] = __DATE__;
     const char Time[9] = __TIME__;
     volatile unsigned int cnt = 0;
-    char uart[256];
-
-    memset(uart,0,256*sizeof(char));
-    sprintf(uart,"[-CPU3-]:Build Time:%s-%s.\n",Date,Time);
-    my_print(uart);
+    
+    printf("[-CPU3-]:Build Time:%s-%s.\n",Date,Time);
+    printf("[-CPU3-]:float test pi = %lf\n",gdPi);
     for(;;)
     {
-        sprintf(uart,"[-CPU3-]:run times:0x%08x.\n",cnt);
-        my_print(uart);
+        printf("[-CPU3-]:run times:0x%08x.\n",cnt);
         cnt++;
         delay(30);
     }
