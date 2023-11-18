@@ -38,9 +38,6 @@ typedef struct _core_startup_info {
     void * arg;                 //!< Argument to pass core entry point.
 } core_startup_info_t;
 
-static core_startup_info_t s_core_info[MAX_CORE_COUNT] = {{0}};
-
-
 static int FileSize(char* filename)
 {
     struct stat status;
@@ -391,9 +388,6 @@ U32 Cpu3Elf2Bin(void)
     Elf_64_Phdr * segment_64 = NULL;
     Elf_32_Phdr * segment_32 = NULL;
 
-    Elf32_Addr lastvaddr_32 = 0;    
-    Elf64_Addr lastvaddr_64 = 0;
-
     if (elf_is_64(gCpu3AppElfData) == 0)
     {
         elf32info = gelf32_info;
@@ -426,8 +420,6 @@ U32 Cpu3_Load(void)
 {
     int rc=0;
     U32 ulRdCnt  =0;
-    FILE *pCpu3App = NULL;   
-    S32 slFileSize = 0;
     rc = Cpu3Elf_Load();
     if(rc != RET_OK)
     {
