@@ -26,28 +26,31 @@ Bare-metal applications on cpu3**
 ### Test
 ```
 [root@imx6q /usr/local/app]# ls
-SW_APP.out    cpu3_app.bin  cpu3_app.elf
+SW_APP.out    cpu3_app.elf
 [root@imx6q /usr/local/app]# ./SW_APP.out &
-[root@imx6q /usr/local/app]# App start ...
-
-load /usr/local/app/cpu3_app.elf to Stream buf , size 425024.
+[root@imx6q /usr/local/app]#
+App start ...
+Build Time:Nov 18 2023-19:46:01.
+load /usr/local/app/cpu3_app.elf to Stream buf , size 209752.
 Loading ELF headering
 Loading ELF program headering
 Loading ELF section header.
 Loading ELF shstrtab.
-load cpu3 app to Stream buf , size 135648.
-load /usr/local/app/cpu3_app.bin success .
-cpu3 entry addr:0x78000000,entry arg:0x7801f894
+/usr/local/app/cpu3_app.elf convert to bin success, bin size 164524.
+load cpu3 elf app success , size 164524.
+cpu3 entry addr:0x78000438,entry arg:0x7800f154
 cpu3 power on
-cpu3 soft uart addr:0x780211d8
-CPU3 SoftUartInit Vir addr: 0xb64371d8
+cpu3 soft uart addr:0x780282a4
+cpu3 soft uart vir addr: 0xb65092a4
 softuart thread start ...
-CPU3: [-CPU3-]:Build Time:Sep 14 2023-07:29:20.
-CPU3: [-CPU3-]:run times:0x00000000.
-CPU3: [-CPU3-]:run times:0x00000001.
-CPU3: [-CPU3-]:run times:0x00000002.
-CPU3: [-CPU3-]:run times:0x00000003.
-CPU3: [-CPU3-]:run times:0x00000004.
+[-CPU3-]:Build Time:Nov 18 2023-11:05:53.
+[-CPU3-]:float test pi = 3.141593
+[-CPU3-]:run times:0x00000000.
+[-CPU3-]:run times:0x00000001.
+
+
+
+
 ```
 
 #### 参与贡献
