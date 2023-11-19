@@ -5,7 +5,7 @@ CC_FLAGS += -Wall -Wno-unused-but-set-variable -Wno-format
 CC_FLAGS += -O0 -g -mno-unaligned-access -fdce 
 CC_FLAGS += -march=armv7-a -mtune=cortex-a9 -mapcs
 CC_FLAGS += -fno-common -ffreestanding -fno-builtin -static 
-CC_FLAGS += -mfpu=neon -ftree-vectorize -fno-math-errno -funsafe-math-optimizations -fno-signed-zeros -mfloat-abi=softfp
+CC_FLAGS += -mfpu=neon-vfpv3 -ftree-vectorize -fno-math-errno -funsafe-math-optimizations -fno-signed-zeros -mfloat-abi=softfp
 CC_FLAGS += -marm
 C99_FLAGS += -std=gnu99 -fgnu89-inline
 
@@ -60,7 +60,7 @@ LIBC_INCLUDE += $(CC_PREFIX)/$(CROSS_COMPILE_STRIP)/include/c++/$(CC_VERSION)
 
 APPSRC_INCLUDE :=$(WORK_DIR)/apps/include
 
-LDFLAGS = -lc -lgcc -u _printf_float
+LDFLAGS = -lc -lgcc -u _printf_float -lm
 
 LDINC += -L '$(LIBGCC_LDPATH)' -L '$(LIBC_LDPATH)'
 

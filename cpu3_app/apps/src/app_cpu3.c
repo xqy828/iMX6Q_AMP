@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include "cortex_a9.h"
 #include "public.h"
 __attribute__ ((section (".cpu3softuart")))  unsigned int softuart[2] = {[0 ... 1] = 0x0};
 
@@ -7,6 +8,8 @@ __attribute__ ((section (".cpu3softuart")))  unsigned int softuart[2] = {[0 ... 
 #define COMM_TX_DATA (softuart[1])
 
 const unsigned int PLL1_CLK = 792000000;
+extern unsigned int TestNeon(void);
+extern void TestRoundData(unsigned int Row,unsigned int Line);
 
 void myPutChar(char c)
 {
@@ -57,9 +60,14 @@ __attribute__ ((section (".cpu3main"))) void main(void)
     
     printf("[-CPU3-]:Build Time:%s-%s.\n",Date,Time);
     printf("[-CPU3-]:float test pi = %lf\n",gdPi);
+    printf("[-CPU3-]:Enable SIMD VFP \n");
+    Enable_SIMD_VFP();
+    printf("[-CPU3-]:Neon Test ...\n");
+    TestNeon();
     for(;;)
     {
         printf("[-CPU3-]:run times:0x%08x.\n",cnt);
+        TestRoundData(10,5);
         cnt++;
         delay(30);
     }
