@@ -64,10 +64,11 @@ __attribute__ ((section (".cpu3main"))) void main(void)
     Enable_SIMD_VFP();
     printf("[-CPU3-]:Neon Test ...\n");
     TestNeon();
+    printf("[-CPU3-]:Normal Distribution Random number Test ...\n");
+    TestRoundData(10,5);
     for(;;)
     {
         printf("[-CPU3-]:run times:0x%08x.\n",cnt);
-        TestRoundData(10,5);
         cnt++;
         delay(30);
     }
