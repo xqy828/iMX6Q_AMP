@@ -7,5 +7,5 @@
 #include <stdlib.h>
 
 void Enable_SIMD_VFP(void);
-
+int get_cpuid(void);
 #endif

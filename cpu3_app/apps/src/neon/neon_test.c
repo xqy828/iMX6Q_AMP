@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include "arm_neon.h"
-
+#include "public.h"
 #define TEST_DATA_LEN (8192)
 float CosParam[TEST_DATA_LEN] = {
                                 #include "cosParam.txt"
@@ -56,7 +56,7 @@ unsigned int TestNeon(void)
     }
 
     printf("\n");
-    printf("[-CPU3-]:C Intrinsics done \n");
+    disp("C Intrinsics done \n");
 
     for(ucIndx = 0;ucIndx < ucLen /4 ; ucIndx++)
     {
@@ -92,22 +92,22 @@ unsigned int TestNeon(void)
         printf("I:%6d-Q:%6d|",dataOut_I[ucIndx],dataOut_Q[ucIndx]);
     }
     printf("\n");
-    printf("[-CPU3-]:NEON Intrinsics done \n");
-    printf("[-CPU3-]:int convert to  short test \n");
-    printf("[-CPU3-]:RAW Data: \n");
+    disp("NEON Intrinsics done \n");
+    disp("int convert to  short test \n");
+    disp("RAW Data: \n");
     for(ucIndx = 0;ucIndx <4;ucIndx++)
     {
         printf("%d ",datatest_in[ucIndx]);
     }
     printf("\n");
-    printf("[-CPU3-]:C: \n");
+    disp("C: \n");
     for(ucIndx = 0;ucIndx <4;ucIndx++)
     {
         datatest_out[ucIndx] = datatest_in[ucIndx];
         printf("%d ",datatest_out[ucIndx]);
     }
     printf("\n");
-    printf("[-CPU3-]:NEON:\r\n");
+    disp("NEON:\r\n");
     datatest_neon = vld1q_s32(&datatest_in[0]);
     vst1_s16(&datatest_out[0],vmovn_s32(datatest_neon));
     for(ucIndx = 0;ucIndx <4;ucIndx++)
@@ -115,7 +115,7 @@ unsigned int TestNeon(void)
         printf("%d ",datatest_out[ucIndx]);
     }
     printf("\n");
-    printf("[-CPU3-]:NEON saturated:\r\n");
+    disp("NEON saturated:\r\n");
     vst1_s16(&datatest_out[0],vqmovn_s32(datatest_neon));
     for(ucIndx = 0;ucIndx <4;ucIndx++)
     {

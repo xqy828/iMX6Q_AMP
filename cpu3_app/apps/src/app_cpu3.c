@@ -57,18 +57,17 @@ __attribute__ ((section (".cpu3main"))) void main(void)
     const char Date[12] = __DATE__;
     const char Time[9] = __TIME__;
     volatile unsigned int cnt = 0;
-    
-    printf("[-CPU3-]:Build Time:%s-%s.\n",Date,Time);
-    printf("[-CPU3-]:float test pi = %lf\n",gdPi);
-    printf("[-CPU3-]:Enable SIMD VFP \n");
+    disp("Build Time:%s-%s.\n",Date,Time);
+    disp("float test pi = %lf\n",gdPi);
+    disp("Enable SIMD VFP \n");
     Enable_SIMD_VFP();
-    printf("[-CPU3-]:Neon Test ...\n");
+    disp("Neon Test ...\n");
     TestNeon();
-    printf("[-CPU3-]:Normal Distribution Random number Test ...\n");
+    disp("Normal Distribution Random number Test ...\n");
     TestRoundData(10,5);
     for(;;)
     {
-        printf("[-CPU3-]:run times:0x%08x.\n",cnt);
+        disp("run times:0x%08x.\n",cnt);
         cnt++;
         delay(30);
     }
