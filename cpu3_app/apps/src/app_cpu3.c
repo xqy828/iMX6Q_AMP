@@ -51,12 +51,20 @@ int _write(int fd,char *ptr,int len)
     return len;
 }
 
+void data_abort_test(void)
+{
+    unsigned int *p = (unsigned int *)0x79880001;
+    *p = 1;
+}
+
 double gdPi = 3.141592654;
 __attribute__ ((section (".cpu3main"))) void main(void)
 {
     const char Date[12] = __DATE__;
     const char Time[9] = __TIME__;
     volatile unsigned int cnt = 0;
+    unsigned int vbar_reg = 0;
+    unsigned int cpsr_reg = 0;
     disp("Build Time:%s-%s.\n",Date,Time);
     disp("float test pi = %lf\n",gdPi);
     disp("Enable SIMD VFP \n");
@@ -65,9 +73,14 @@ __attribute__ ((section (".cpu3main"))) void main(void)
     TestNeon();
     disp("Normal Distribution Random number Test ...\n");
     TestRoundData(10,5);
+    cpsr_reg = read_cpsr_reg();
+    disp("cpsr reg = 0x%08lx\n",cpsr_reg);
+    _arm_mrc(15, 0, vbar_reg, 12, 0, 0);
+    disp("vbar reg = 0x%08lx\n",vbar_reg);
     for(;;)
     {
         disp("run times:0x%08x.\n",cnt);
+        data_abort_test();
         cnt++;
         delay(30);
     }

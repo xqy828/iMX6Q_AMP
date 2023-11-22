@@ -40,22 +40,34 @@
     .global __bss_start__
     .global __bss_end__
     .global _sys_exit
-    
-    .code 32
-    .section ".startup","ax"
-    
     .global _start
-    .func _start 
+    .code 32
+    .section ".boot","ax"
+    
+    .global _boot
+    .func _boot 
     .fnstart
-_start:
+_boot:
     @ save r0 for cores 1-3, r0 arg field passed by ROM
     @ r0 is a function pointer for secondary cpus
     mov 	r4, r0
-
+    
     @ clear some registers
     mov     r11,#0
     mov     r12,#0
     mov     lr,#0
+ 
+    @ set SVC MODE 
+    @mrs r2, cpsr
+    @bic r2, r2, #0x1f
+    @orr r2, r2, #0xd3
+    @msr cpsr, r2
+
+    mrc p15, 0 ,r1, c1, c0, 0
+    bic r1, r1, #0x00002000    @clear bit 13 
+    mcr p15, 0, r1, c1, c0, 0
+    ldr r1,=_start
+    mcr p15, 0, r1, c12, c0, 0 @set VBAR
     
     ldr		r0, =top_of_stacks  @ symbol defined in linker file
     mov		r1, #EXCEPTION_STACK_SIZE
@@ -94,8 +106,8 @@ _start:
     @ Set SVC mode stack with interrupts disabled 
     msr     CPSR_c, #MODE_SVC | I_BIT | F_BIT
     mov     sp, r0
-    sub     r0, r0, r1 
-
+    sub     r0, r0, r1
+   
    	/* init .bss */
     /* clear the .bss section (zero init) */
     ldr     r1,=__bss_start__

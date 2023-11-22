@@ -142,7 +142,10 @@ SECTIONS
     .text : ALIGN(8)
     {
         CREATE_OBJECT_SYMBOLS
-        *(.startup)
+        . = ALIGN(32);
+        KEEP(*(.vectors))
+        . = ALIGN(8);
+        *(.boot)
         *(.text .text.* .gnu.linkonce.t.*)
         *(.glue_7t) *(.glue_7) *(.vfp11_veneer)
         
