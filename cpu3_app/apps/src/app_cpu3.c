@@ -57,6 +57,19 @@ void data_abort_test(void)
     *p = 1;
 }
 
+void prefectch_abort_test(void)
+{
+    unsigned int badaddr = 0x79000000;
+    asm volatile(
+        "mov r5,%0\n"
+        "mov pc,r5\n"
+        :
+        : "r"(badaddr)
+        : "r5"
+                );
+}
+
+
 double gdPi = 3.141592654;
 __attribute__ ((section (".cpu3main"))) void main(void)
 {
@@ -77,10 +90,12 @@ __attribute__ ((section (".cpu3main"))) void main(void)
     disp("cpsr reg = 0x%08lx\n",cpsr_reg);
     _arm_mrc(15, 0, vbar_reg, 12, 0, 0);
     disp("vbar reg = 0x%08lx\n",vbar_reg);
+    disp_scu_all_regs();
     for(;;)
     {
         disp("run times:0x%08x.\n",cnt);
-        data_abort_test();
+        //data_abort_test();
+        //prefectch_abort_test();
         cnt++;
         delay(30);
     }
