@@ -4,12 +4,24 @@
 #include <errno.h>
 #include <stdlib.h>
 #include "asm_defines.h"
+#include "public.h"
 
 extern int free_memory_start;
 extern int free_memory_end;
 
 char * __env[1] = { 0 };
 __attribute__ ((unused)) static char ** environ = __env;
+__attribute__ ((section (".cpu3softuart")))  unsigned int softuart[2] = {[0 ... 1] = 0x0};
+
+#define COMM_TX_FLAG (softuart[0])
+#define COMM_TX_DATA (softuart[1])
+
+static void myPutChar(char c)
+{
+    while(COMM_TX_FLAG);//wait other cpu consume previous value
+    COMM_TX_DATA = (unsigned int)c;
+    COMM_TX_FLAG = 1;
+}
 
 __attribute__ ((noreturn)) void _sys_exit(int32_t return_code)
 {
@@ -33,10 +45,17 @@ int _fstat(int fd, struct stat * st)
     return 0;
 }
 
-__attribute__((weak)) int _write(int fd,char *ptr,int len)
+int _write(int fd,char *ptr,int len)
 {
-    return 0;
-} 
+    int i = 0;
+    UNUSED_PARA(fd);
+    for (i = 0; i < len; i++)
+    {
+        myPutChar(*ptr);
+        ptr++;
+    }
+    return len;
+}
 
 int _wait(int *status)
 {

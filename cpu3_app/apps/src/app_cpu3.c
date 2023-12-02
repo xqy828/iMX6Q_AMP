@@ -2,26 +2,10 @@
 #include <string.h>
 #include "cortex_a9.h"
 #include "public.h"
-__attribute__ ((section (".cpu3softuart")))  unsigned int softuart[2] = {[0 ... 1] = 0x0};
-
-#define COMM_TX_FLAG (softuart[0])
-#define COMM_TX_DATA (softuart[1])
 
 const unsigned int PLL1_CLK = 792000000;
 extern unsigned int TestNeon(void);
 extern void TestRoundData(unsigned int Row,unsigned int Line);
-
-void myPutChar(char c)
-{
-    while(COMM_TX_FLAG);//wait other cpu consume previous value
-    COMM_TX_DATA = (unsigned int)c;
-    COMM_TX_FLAG = 1;
-}
-
-void myoutbyte(char c)
-{
-    myPutChar(c);
-}
 
 void delay_short(volatile unsigned int n)
 {
@@ -37,18 +21,6 @@ void delay(volatile unsigned int n)
     {
         delay_short(0xbbccf);
     }
-}
-
-int _write(int fd,char *ptr,int len)
-{
-    int i = 0;
-    UNUSED_PARA(fd);
-    for (i = 0; i < len; i++)
-    {
-        myoutbyte(*ptr);
-        ptr++;
-    }
-    return len;
 }
 
 void data_abort_test(void)
