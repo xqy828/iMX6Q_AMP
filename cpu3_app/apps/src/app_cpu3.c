@@ -6,7 +6,7 @@
 const unsigned int PLL1_CLK = 792000000;
 extern unsigned int TestNeon(void);
 extern void TestRoundData(unsigned int Row,unsigned int Line);
-
+extern void mmu_table_init(void);
 void delay_short(volatile unsigned int n)
 {
     while(n--)
@@ -63,6 +63,7 @@ __attribute__ ((section (".cpu3main"))) void main(void)
     _arm_mrc(15, 0, vbar_reg, 12, 0, 0);
     disp("vbar reg = 0x%08lx\n",vbar_reg);
     disp_scu_all_regs();
+    mmu_table_init();
     for(;;)
     {
         disp("run times:0x%08x.\n",cnt);

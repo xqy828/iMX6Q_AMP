@@ -17,10 +17,12 @@
 #include "kernelmap.h"
 
 #define PAGE_SIZE ((size_t)getpagesize())
-#define MAX_CPU3_APP_SIZE  (2*1024*1024) /*  2M bytes */ 
+#define MAX_CPU3_APP_SIZE  (10*1024*1024) /*  10M bytes */ 
 #define Cpu3AppBinName  "/usr/local/app/cpu3_app.bin"
 #define Cpu3AppElfName  "/usr/local/app/cpu3_app.elf"
 #define MAX_CORE_COUNT (4)
+#define ALIGN_DOWN(x,align)     (x & (align-1))
+#define ALIGN_UP(x,align)       ((x + align -1) & ~(align - 1))
 
 unsigned char gCpu3AppBinData[MAX_CPU3_APP_SIZE] = {0};
 unsigned char gCpu3AppElfData[MAX_CPU3_APP_SIZE] = {0};
@@ -382,12 +384,13 @@ U32 Cpu3Elf2Bin(void)
 {
     U32 ulCnt = 0;
     U32 ulRdCnt = 0;
+    U32 ulAlign = 2;
     struct elf64_info *elf64info = NULL;
     struct elf32_info *elf32info = NULL;
     
     Elf_64_Phdr * segment_64 = NULL;
     Elf_32_Phdr * segment_32 = NULL;
-
+    memset(gCpu3AppBinData,0,sizeof(unsigned char) * MAX_CPU3_APP_SIZE) ;
     if (elf_is_64(gCpu3AppElfData) == 0)
     {
         elf32info = gelf32_info;
@@ -397,6 +400,11 @@ U32 Cpu3Elf2Bin(void)
             {
                 memcpy(gCpu3AppBinData + ulRdCnt,gCpu3AppElfData + segment_32->p_offset,segment_32->p_filesz);
                 ulRdCnt +=segment_32->p_filesz;
+                if(ulAlign <= segment_32->p_align)
+                {
+                    ulAlign = segment_32->p_align;
+                }
+
             }
         }
     }
@@ -409,10 +417,14 @@ U32 Cpu3Elf2Bin(void)
             {
                 memcpy(gCpu3AppBinData + ulRdCnt,gCpu3AppElfData + segment_64->p_offset,segment_64->p_filesz);
                 ulRdCnt +=segment_64->p_filesz;
+                if(ulAlign <= segment_64->p_align)
+                {
+                    ulAlign = segment_64->p_align;
+                }
             }
         }
     }
-
+    ulRdCnt = ALIGN_UP(ulRdCnt,ulAlign);
     return ulRdCnt;
 }
 
@@ -420,6 +432,7 @@ U32 Cpu3_Load(void)
 {
     int rc=0;
     U32 ulRdCnt  =0;
+    
     rc = Cpu3Elf_Load();
     if(rc != RET_OK)
     {
@@ -434,6 +447,19 @@ U32 Cpu3_Load(void)
         return RET_NOK;
     }
     printf("%s convert to bin success, bin size %d. \r\n",Cpu3AppElfName,ulRdCnt);
+#ifdef SAVE_BIN
+    FILE *pCpu3App = NULL;
+
+    if((pCpu3App = fopen(Cpu3AppBinName,"wb+")) == NULL)
+    {
+        printf("open cpu3 app failed \r\n");
+        return RET_NOK;
+    }
+    rc = fwrite(&gCpu3AppBinData,sizeof(char),ulRdCnt,pCpu3App);
+    fclose(pCpu3App);
+    printf("save %s bin success, bin size %d. \r\n",Cpu3AppBinName,rc);
+#endif
+
 /*
     if((slFileSize = FileSize(Cpu3AppBinName)) <= 0)
     {

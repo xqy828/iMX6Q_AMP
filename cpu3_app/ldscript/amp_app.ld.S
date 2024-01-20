@@ -48,7 +48,7 @@ ENTRY(_start)
 #define DDR_LEN 128M
 
 // Maximum size of the signed image
-#define MAX_IMAGE_SIZE 4M
+#define MAX_IMAGE_SIZE 10M
 
 // Maximum size of HAB CSF data
 #define MAX_HAB_CSF_DATA_SIZE 8K
@@ -59,7 +59,7 @@ ENTRY(_start)
 #define HEAP_SIZE 16M
 
 // Size of the L1 page table.
-#define L1_PAGE_TABLE_SIZE 16K
+#define MMU_TBL_SIZE 16K
 
 // Size of the RAM vectors table at the top of OCRAM.
 //
@@ -76,34 +76,7 @@ MEMORY
 
 SECTIONS
 {
-/*
-    * -- OCRAM --
-    *
-    * Nothing in OCRAM can be loaded at boot, because the boot image must be a contiguous
-    * region of memory.
-*/
-    /* MMU L1 page table */
-    .l1_page_table (NOLOAD) :
-    {
-        __l1_page_table_start = .;
-        . += L1_PAGE_TABLE_SIZE;
-    } > OCRAM
 
-    /* allocate a heap in ocram */
-    .heap.ocram (NOLOAD) : ALIGN(4)
-    {
-        __heap_ocram_start = .;
-        . += LENGTH(OCRAM) - L1_PAGE_TABLE_SIZE - RAM_VECTORS_SIZE ;
-        __heap_ocram_end = .;
-    } > OCRAM
-
-    /* RAM vector table comes at the end of OCRAM */
-    .ram_vectors (ORIGIN(OCRAM) + LENGTH(OCRAM) - RAM_VECTORS_SIZE) (NOLOAD) :
-    {
-        __ram_vectors_start = .;
-        . += RAM_VECTORS_SIZE;
-        __ram_vectors_end = .;
-    } > OCRAM
 /*
  * -- DDR --
  */
@@ -223,7 +196,23 @@ SECTIONS
         *(.data .data.* .gnu.linkonce.d.*)
         SORT(CONSTRUCTORS)
     } > DDR
+    
+    .mmu_l1_table : ALIGN(16384)
+    {
+        __mmu_l1_tbl_start = .;
+        *(.mmu_l1_tbl)
+        __mmu_l1_tbl_end = .;
+    } > DDR
+    
+    .mmu_l2_table : ALIGN(1024)
+    {
+        __mmu_l2_tbl_start = .;
+        *(.mmu_l2_tbl)
+        __mmu_l2_tbl_end = .;
+    } > DDR
 
+    . = ALIGN(4);
+    
     /* Reserve some space for HAB CSF data */
     .hab.data (_start_image_add + MAX_IMAGE_SIZE) : ALIGN(4)
     {

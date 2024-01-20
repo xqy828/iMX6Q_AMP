@@ -46,8 +46,8 @@ void KernelMmapInit(void)
 	}
 	gKernelMmapCtrl.mem_fd = mem_fd;
     kernel_phys_to_virt(REGS_SRC_BASE,PAGE_SIZE,gKernelMmapCtrl.mem_fd,&gKernelMmapCtrl.memRegsSrcBase);
-    /* MAX cpu3 app size is 2M */
-    PAGE_CNT = SIZE_1M * 2 /PAGE_SIZE +1;
+    /* MAX cpu3 app size is 10M */
+    PAGE_CNT = SIZE_1M * 10 /PAGE_SIZE +1;
     kernel_phys_to_virt(CPU3APP_PHY_BASE,PAGE_SIZE*PAGE_CNT,gKernelMmapCtrl.mem_fd,&gKernelMmapCtrl.memCpu3PhyBase);
 
 	close(mem_fd);
