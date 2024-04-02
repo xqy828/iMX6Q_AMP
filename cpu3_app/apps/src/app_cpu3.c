@@ -2,11 +2,12 @@
 #include <string.h>
 #include "cortex_a9.h"
 #include "public.h"
+#include "mmu.h"
 
 const unsigned int PLL1_CLK = 792000000;
 extern unsigned int TestNeon(void);
 extern void TestRoundData(unsigned int Row,unsigned int Line);
-extern void mmu_table_init(void);
+
 void delay_short(volatile unsigned int n)
 {
     while(n--)
@@ -64,6 +65,7 @@ __attribute__ ((section (".cpu3main"))) void main(void)
     disp("vbar reg = 0x%08lx\n",vbar_reg);
     disp_scu_all_regs();
     mmu_table_init();
+    Test_VirtualMMU(0xdeadbeef);
     for(;;)
     {
         disp("run times:0x%08x.\n",cnt);

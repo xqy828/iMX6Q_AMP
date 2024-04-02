@@ -44,7 +44,7 @@ Start Address       End Address  |  SIZE     |   Description                    
 -----------------------------------------------------------------------------------------------------------------------------
 *****************************************************************************************************************************/
 #include "public.h"
-
+#include "mmu.h"
 #define MMU_L1_TABLE_ITEM_NUM  (4096)       // L1 size is 4096 index * 4 bytes 
 #define MMU_L2_TABLE_ITEM_NUM  (4096*256)   // each L2 size is 256 index * 4 bytes = 1k;
 
@@ -91,7 +91,9 @@ __attribute__ ((section (".mmu_l2_tbl"))) unsigned int l2_table[MMU_L2_TABLE_ITE
 mmu_l1_entry_t l1_entry;
 mmu_l2_entry_t l2_entry;
 
-
+/*
+ * create identical mapping, va = pa
+ */
 static void mmu_l1_l2_map(unsigned int pa_start, unsigned int va_start,unsigned int length,unsigned int l1_attr, unsigned int l2_attr)
 {
     unsigned int i = 0;
@@ -116,7 +118,7 @@ static void mmu_l1_l2_map(unsigned int pa_start, unsigned int va_start,unsigned 
         l1_index = (va & 0xfff00000) >> 20;
         l2_index = (va & 0xff000) >> 12;
         
-        l1_entry.l2_address = (unsigned int)(&__mmu_l2_tbl_start) + l1_index * 256 * 4;//bytes
+        l1_entry.l2_address = ((unsigned int)(&__mmu_l2_tbl_start) + l1_index * 256 * 4) >> 10;//bytes
         l1_table[l1_index] = l1_entry.u;
         
         l2_entry.address = (pa & 0xfffff000) >> 12;
@@ -229,7 +231,6 @@ void Test_VirtualMMU(unsigned int va)
 
     offset = va & 0xfff;
 
-    //TTBAddr = (unsigned int)(&l1_table[0]);
     
     TTBAddr = (unsigned int)(&__mmu_l1_tbl_start);
 
@@ -239,16 +240,18 @@ void Test_VirtualMMU(unsigned int va)
 
     L1_DescriptorAddr = (TTBAddr & 0xffffc000) + L1_section * 4;
     
-    //L1_Descriptor = *(unsigned int *)L1_DescriptorAddr;
+    L1_Descriptor = *(unsigned int *)L1_DescriptorAddr;
+    disp("L1_DescriptorAddr = 0x%x,L1_Descriptor = 0x%x\n",L1_DescriptorAddr,L1_Descriptor);
     L1_Descriptor = l1_table[L1_section];
-
+    disp("L1_Descriptor = 0x%x\n",L1_Descriptor);
 
     L2_TableBaseAddr = L1_Descriptor & 0xfffffc00; 
     L2_DescriptorAddr = L2_TableBaseAddr + L2_index * 4;
-    
-    //L2_Descriptor = *(unsigned int *)L2_DescriptorAddr;
+    L2_Descriptor = *(unsigned int *)L2_DescriptorAddr;
+    disp("L2_TableBaseAddr = 0x%x,L2_DescriptorAddr = 0x%x,L2_Descriptor = 0x%x\n",L2_TableBaseAddr,L2_DescriptorAddr,L2_Descriptor);
+
     L2_Descriptor = l2_table[L1_section * 256 + L2_index];
-    
+    disp("L2_Descriptor = 0x%x\n",L2_Descriptor);
     SmallPageBaseAddr = L2_Descriptor & 0xfffff000; 
 
     PhysicalAddress = SmallPageBaseAddr + offset;
