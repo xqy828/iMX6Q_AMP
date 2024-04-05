@@ -4,6 +4,8 @@ export ARCH=arm
 export CROSS_COMPILE=arm-none-linux-gnueabihf-
 if [ $(arch) = "x86_64" ]; then
     export PATH=$PATH:/opt/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-linux-gnueabihf/bin
+elif [ $(arch) = "aarch64" ]; then
+    export PATH=$PATH:/opt/arm-gnu-toolchain-12.3.rel1-aarch64-arm-none-linux-gnueabihf/bin
 fi
 echo make distclen
 make distclean
