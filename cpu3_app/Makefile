@@ -1,5 +1,6 @@
 WORK_DIR := $(shell pwd)
 OUTPUT := output
+HOST_ARCH :=$(shell arch)
 APP_SRC := apps/src
 CC_FLAGS += -Wall -Wno-unused-but-set-variable -Wno-format
 CC_FLAGS += -O0 -g -mno-unaligned-access -fdce 
@@ -25,7 +26,9 @@ BIN_NAME = $(PROG_NAME).bin
 OBJ_DIR = $(OUTPUT)/obj
 
 CROSS_COMPILE =arm-none-eabi-
-CROSS_COMPILE_PATH=/opt/arm-gnu-toolchain-12.3.rel1-aarch64-arm-none-eabi/bin/
+ifeq ($(HOST_ARCH),x86_64)
+	CROSS_COMPILE_PATH=/opt/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/bin/
+endif
 # Strip off the trailing '-', resulting in arm-none-eabi
 CROSS_COMPILE_STRIP := $(CROSS_COMPILE:%-=%)
 

@@ -1,4 +1,5 @@
 WORK_DIR := $(shell pwd)
+HOST_ARCH :=$(shell arch)
 OUTPUT := output
 
 #CC_FLAGS += -Werror
@@ -26,7 +27,9 @@ APPSRC_INCLUDE = $(WORK_DIR)/include
 
 INCLUDES := $(foreach dir, $(APPSRC_INCLUDE), -I$(dir))
 
-TOOLS = /opt/arm-gnu-toolchain-12.3.rel1-aarch64-arm-none-linux-gnueabihf/bin/arm-none-linux-gnueabihf-
+ifeq ($(HOST_ARCH),x86_64) 
+	TOOLS = /opt/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-linux-gnueabihf/bin/arm-none-linux-gnueabihf-
+endif
 
 AS = $(TOOLS)as
 CC = $(TOOLS)gcc
