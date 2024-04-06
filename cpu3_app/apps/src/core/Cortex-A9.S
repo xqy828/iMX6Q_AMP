@@ -23,7 +23,7 @@ Enable_SIMD_VFP:
     VMSR FPEXC, r1
     @bl dump_regs /* debug */
     pop {lr}
-    bx      lr
+    bx  lr
     .endfunc
     
   .global get_cpuid
@@ -34,6 +34,37 @@ get_cpuid:
     and   r0, r0, #0xf
 	bx	  lr
   .endfunc
+
+    .global disable_mmu
+    .func disable_mmu
+disable_mmu:
+    MRC p15, 0, r0, c1, c0, 0 @ Read System Control Register configuration data
+    BIC r0, r0, #0x1
+    MCR p15, 0, r0, c1, c0, 0 @ Write System Control Register configuration data
+    bx lr
+    .endfunc
+
+    .global enable_mmu
+    .func enable_mmu
+enable_mmu:
+    MRC p15, 0, r0, c1, c0, 0 @ Read System Control Register configuration data
+    ORR r0, r0, #0x1 @ Bit 0 is the MMU enable
+    MCR p15, 0, r0, c1, c0, 0 @ Write System Control Register configuration data
+    bx lr
+    .endfunc
+
+    .global disable_l1_caches
+    .func disable_l1_caches
+disable_l1_caches:
+    MRC p15, 0, r0, c1, c0, 0 @ Read System Control Register configuration data
+    BIC r0, r0, #(0x1 << 12) @ disable I Cache
+    BIC r0, r0, #(0x1 << 2) @ disable D Cache
+    MCR p15, 0, r0, c1, c0, 0 @ Write System Control Register configuration data
+    bx lr
+    .endfunc
+
+
+
 
 
     .end
