@@ -53,6 +53,7 @@ __attribute__ ((section (".cpu3main"))) void main(void)
     unsigned int cpsr_reg = 0;
     disp("Build Time:%s-%s.\n",Date,Time);
     disp("float test pi = %lf\n",gdPi);
+    disable_mmu();// if enabled
     disp("Enable SIMD VFP \n");
     Enable_SIMD_VFP();
     disp("Neon Test ...\n");

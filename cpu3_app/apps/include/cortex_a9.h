@@ -39,6 +39,7 @@ int get_cpuid(void);
 unsigned int read_cpsr_reg(void);
 unsigned int read_cbar_reg(void);
 void disp_scu_all_regs(void);
-
+void disable_mmu(void);
+void enable_mmu(void);
 
 #endif
