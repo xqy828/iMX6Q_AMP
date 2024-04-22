@@ -63,6 +63,58 @@ disable_l1_caches:
     bx lr
     .endfunc
 
+    .global invalidate_tlb
+    .func invalidate_tlb
+invalidate_tlb:
+    mov r0,#1
+    mcr p15,0,r0,c8,c7,0
+    dsb
+    bx lr
+    .endfunc
+    
+  .global arm_branch_target_cache_invalidate
+  @ void arm_branch_target_cache_invalidate(void)
+  .func arm_branch_target_cache_invalidate
+arm_branch_target_cache_invalidate:
+  mov     r0, #0
+  mcr     p15, 0, r0, c7, c5, 6                 @ BPIALL - Invalidate entire branch predictor array
+  bx      lr
+  .endfunc
+
+  .global arm_branch_prediction_enable
+  @ void arm_branch_prediction_enable(void)
+  .func arm_branch_prediction_enable
+arm_branch_prediction_enable:
+  mrc     p15, 0, r0, c1, c0, 0                 @ Read SCTLR
+  orr     r0, r0, #(1 << 11)                    @ Set the Z bit (bit 11)
+  mcr     p15, 0,r0, c1, c0, 0                  @ Write SCTLR
+  bx      lr
+  .endfunc
+
+  .global arm_branch_prediction_disable
+  @ void arm_branch_prediction_disable(void)
+  .func arm_branch_prediction_disable
+arm_branch_prediction_disable:
+  mrc     p15, 0, r0, c1, c0, 0                 @ Read SCTLR
+  bic     r0, r0, #(1 << 11)                    @ Clear the Z bit (bit 11)
+  mcr     p15, 0,r0, c1, c0, 0                  @ Write SCTLR
+  bx      lr
+  .endfunc
+
+  .global  scu_join_smp
+  @ void scu_join_smp(void)
+  @ Set this CPU as participating in SMP
+  .func scu_join_smp
+scu_join_smp:
+
+  @ SMP status is controlled by bit 6 of the CP15 Aux Ctrl Reg
+
+  mrc     p15, 0, r0, c1, c0, 1   @ Read ACTLR
+  orr     r0, r0, #0x040          @ Set bit 6
+  mcr     p15, 0, r0, c1, c0, 1   @ Write ACTLR
+
+  bx      lr
+  .endfunc
 
 
 

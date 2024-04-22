@@ -3,6 +3,7 @@
 #include "cortex_a9.h"
 #include "public.h"
 #include "mmu.h"
+#include "arm_cache.h"
 
 const unsigned int PLL1_CLK = 792000000;
 extern unsigned int TestNeon(void);
@@ -54,19 +55,37 @@ __attribute__ ((section (".cpu3main"))) void main(void)
     disp("Build Time:%s-%s.\n",Date,Time);
     disp("float test pi = %lf\n",gdPi);
     disable_mmu();// if enabled
-    disp("Enable SIMD VFP \n");
-    Enable_SIMD_VFP();
-    disp("Neon Test ...\n");
-    TestNeon();
-    disp("Normal Distribution Random number Test ...\n");
-    TestRoundData(10,5);
     cpsr_reg = read_cpsr_reg();
     disp("cpsr reg = 0x%08lx\n",cpsr_reg);
     _arm_mrc(15, 0, vbar_reg, 12, 0, 0);
     disp("vbar reg = 0x%08lx\n",vbar_reg);
     disp_scu_all_regs();
-    mmu_table_init();
+    
+    invalidate_tlb();
+    arm_icache_invalidate();
+    arm_branch_target_cache_invalidate();
+    arm_dcache_invalidate();
+    mmu_init();
     Test_VirtualMMU(0xdeadbeef);
+    disp("Enable SIMD VFP \n");
+    Enable_SIMD_VFP();
+    //mmu_enable();
+    disp("Enable MMU \n");
+    arm_branch_prediction_enable();
+    // Enable L1 caches
+    arm_dcache_enable();
+    //arm_dcache_invalidate();
+    arm_icache_enable();
+    //arm_icache_invalidate();
+    disp("Enable Cache \n");
+
+    scu_join_smp();
+    
+    disp("Neon Test ...\n");
+    TestNeon();
+    disp("Normal Distribution Random number Test ...\n");
+    TestRoundData(10,5);
+
     for(;;)
     {
         disp("run times:0x%08x.\n",cnt);

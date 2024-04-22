@@ -44,7 +44,10 @@ Start Address       End Address  |  SIZE     |   Description                    
 -----------------------------------------------------------------------------------------------------------------------------
 *****************************************************************************************************************************/
 #include "public.h"
+#include "cortex_a9.h"
 #include "mmu.h"
+#include "asm_defines.h"
+
 #define MMU_L1_TABLE_ITEM_NUM  (4096)       // L1 size is 4096 index * 4 bytes 
 #define MMU_L2_TABLE_ITEM_NUM  (4096*256)   // each L2 size is 256 index * 4 bytes = 1k;
 
@@ -211,6 +214,7 @@ void mmu_table_init(void)
     mmu_l1_l2_map(0x08000000, 0x0800000,0x8000000,0x001,0x436);
     /* 0x1000_0000---------0xFFFF_FFFF  |  3840 MB  |   MMDC—DDR Controller.                     |*/
     mmu_l1_l2_map(0x10000000, 0x10000000,0xf0000000,0x1e1,0x576);// Shareable, Outer and Inner Write-Back, Write-Allocate cache 
+    invalidate_tlb();
     disp("translation table init done \n");   
     return;
 }
@@ -260,10 +264,58 @@ void Test_VirtualMMU(unsigned int va)
     disp("va = 0x%x,pa = 0x%x\n",va,PhysicalAddress);
 }
 
+void mmu_init(void)
+{
+    unsigned int *table = (unsigned int *)(&__mmu_l1_tbl_start);
+    _arm_mcr(15,0,table,2,0,0);
+    unsigned int dacr = 0x55555555;// set client mode for all domains
+    _arm_mcr(15,0,dacr,3,0,0);
+    mmu_table_init();
+}
 
 
+unsigned int mmu_virtual2physical(unsigned int virtualAddress, unsigned int * physicalAddress)
+{
+
+    return 0;
+}
 
 
+unsigned int mmu_physical2virtual(unsigned int physicalAddress, unsigned int *virtualAddress)
+{
+
+
+    return 0;
+}
+
+
+void mmu_enable(void)
+{
+    // invalidate all tlb 
+    invalidate_tlb();
+    // read SCTLR 
+    uint32_t sctlr;
+    _arm_mrc(15, 0, sctlr, 1, 0, 0);
+    
+    // set MMU enable bit 
+    sctlr |= BM_SCTLR_M;
+
+    // write modified SCTLR
+    _arm_mcr(15, 0, sctlr, 1, 0, 0);
+}
+
+void mmu_disable(void)
+{
+    // read current SCTLR 
+    uint32_t sctlr;
+    _arm_mrc(15, 0, sctlr, 1, 0, 0);
+    
+    // clear MMU enable bit 
+    sctlr &=~ BM_SCTLR_M;
+
+    // write modified SCTLR
+    _arm_mcr(15, 0, sctlr, 1, 0, 0);
+}
 
 
 

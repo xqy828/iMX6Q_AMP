@@ -41,5 +41,9 @@ unsigned int read_cbar_reg(void);
 void disp_scu_all_regs(void);
 void disable_mmu(void);
 void enable_mmu(void);
-
+void invalidate_tlb(void);
+void arm_branch_target_cache_invalidate(void);
+void arm_branch_prediction_enable(void);
+void arm_branch_prediction_disable(void);
+void scu_join_smp(void);
 #endif
