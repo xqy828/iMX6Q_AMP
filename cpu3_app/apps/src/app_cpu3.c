@@ -8,6 +8,9 @@
 const unsigned int PLL1_CLK = 792000000;
 extern unsigned int TestNeon(void);
 extern void TestRoundData(unsigned int Row,unsigned int Line);
+extern unsigned int softuart[2];
+
+unsigned int process = 0xdeadbeef;
 
 void delay_short(volatile unsigned int n)
 {
@@ -54,6 +57,7 @@ __attribute__ ((section (".cpu3main"))) void main(void)
     unsigned int cpsr_reg = 0;
     disp("Build Time:%s-%s.\n",Date,Time);
     disp("float test pi = %lf\n",gdPi);
+    disp("CPU1 process debug addr:0x%x\n",&process);
     disable_mmu();// if enabled
     cpsr_reg = read_cpsr_reg();
     disp("cpsr reg = 0x%08lx\n",cpsr_reg);
@@ -62,25 +66,22 @@ __attribute__ ((section (".cpu3main"))) void main(void)
     disp_scu_all_regs();
     
     invalidate_tlb();
+    
+    arm_icache_enable();
+    arm_dcache_enable();
+
     arm_icache_invalidate();
-    arm_branch_target_cache_invalidate();
     arm_dcache_invalidate();
+    arm_branch_target_cache_invalidate();
+    arm_branch_prediction_enable();        
     mmu_init();
     Test_VirtualMMU(0xdeadbeef);
+    disp("Enable MMU \n");
+    arm_dcache_invalidate();
+    SetTlbAttributes((unsigned int)&softuart[0],0x1,0x32);
+    mmu_enable();
     disp("Enable SIMD VFP \n");
     Enable_SIMD_VFP();
-    //mmu_enable();
-    disp("Enable MMU \n");
-    arm_branch_prediction_enable();
-    // Enable L1 caches
-    arm_dcache_enable();
-    //arm_dcache_invalidate();
-    arm_icache_enable();
-    //arm_icache_invalidate();
-    disp("Enable Cache \n");
-
-    scu_join_smp();
-    
     disp("Neon Test ...\n");
     TestNeon();
     disp("Normal Distribution Random number Test ...\n");

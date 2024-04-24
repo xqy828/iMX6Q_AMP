@@ -47,6 +47,7 @@ Start Address       End Address  |  SIZE     |   Description                    
 #include "cortex_a9.h"
 #include "mmu.h"
 #include "asm_defines.h"
+#include "arm_cache.h"
 
 #define MMU_L1_TABLE_ITEM_NUM  (4096)       // L1 size is 4096 index * 4 bytes 
 #define MMU_L2_TABLE_ITEM_NUM  (4096*256)   // each L2 size is 256 index * 4 bytes = 1k;
@@ -214,7 +215,7 @@ void mmu_table_init(void)
     mmu_l1_l2_map(0x08000000, 0x0800000,0x8000000,0x001,0x436);
     /* 0x1000_0000---------0xFFFF_FFFF  |  3840 MB  |   MMDC—DDR Controller.                     |*/
     mmu_l1_l2_map(0x10000000, 0x10000000,0xf0000000,0x1e1,0x576);// Shareable, Outer and Inner Write-Back, Write-Allocate cache 
-    invalidate_tlb();
+    //mmu_l1_l2_map(0x10000000, 0x10000000,0xf0000000,0x1e1,0x7e);// no-Shareable, Outer and Inner Write-Back, Write-Allocate cache 
     disp("translation table init done \n");   
     return;
 }
@@ -239,6 +240,7 @@ void Test_VirtualMMU(unsigned int va)
     
     TTBAddr = (unsigned int)(&__mmu_l1_tbl_start);
 
+    disp("L1_TblAddr = 0x%x \n",TTBAddr);
 
     L1_section = (va & 0xfff00000) >> 20;
     L2_index = (va & 0xff000) >> 12;
@@ -267,7 +269,10 @@ void Test_VirtualMMU(unsigned int va)
 void mmu_init(void)
 {
     unsigned int *table = (unsigned int *)(&__mmu_l1_tbl_start);
-    _arm_mcr(15,0,table,2,0,0);
+    _arm_mcr(15,0,0,2,0,2);// write TTBCR reg
+    
+    _arm_mcr(15,0,table,2,0,0);  // write table address to TTBR0
+    
     unsigned int dacr = 0x55555555;// set client mode for all domains
     _arm_mcr(15,0,dacr,3,0,0);
     mmu_table_init();
@@ -302,6 +307,8 @@ void mmu_enable(void)
 
     // write modified SCTLR
     _arm_mcr(15, 0, sctlr, 1, 0, 0);
+    _ARM_DSB();
+    _ARM_ISB();
 }
 
 void mmu_disable(void)
@@ -316,6 +323,44 @@ void mmu_disable(void)
     // write modified SCTLR
     _arm_mcr(15, 0, sctlr, 1, 0, 0);
 }
+
+void SetTlbAttributes(unsigned int phy_addr,unsigned int l1_attr,unsigned int l2_attr)
+{
+    unsigned int L1_section = 0;
+    unsigned int L2_index = 0;
+    unsigned int TTBAddr = 0;
+    unsigned int L1_DescriptorAddr = 0;
+    unsigned int L1_Descriptor = 0;
+    unsigned int L2_TableBaseAddr = 0;
+    unsigned int L2_DescriptorAddr = 0;
+    unsigned int L2_Descriptor = 0;
+    
+    L1_section = (phy_addr & 0xfff00000) >> 20;
+    L2_index = (phy_addr & 0xff000) >> 12;
+    
+    TTBAddr = (unsigned int)(&__mmu_l1_tbl_start);
+
+    L1_DescriptorAddr = (TTBAddr & 0xffffc000) + L1_section * 4;
+    
+    L1_Descriptor = *(unsigned int *)L1_DescriptorAddr;
+    
+    L2_TableBaseAddr = L1_Descriptor & 0xfffffc00;
+    L2_DescriptorAddr = L2_TableBaseAddr + L2_index * 4;
+    L2_Descriptor = *(unsigned int *)L2_DescriptorAddr;
+
+    L1_Descriptor  =  (L1_Descriptor & 0xfffffc00) | (l1_attr & 0x3ff);
+    *(unsigned int *)L1_DescriptorAddr = L1_Descriptor; 
+
+    L2_Descriptor = (L2_Descriptor & 0xfffff000) | (l2_attr & 0xfff); 
+    *(unsigned int *)L2_DescriptorAddr = L2_Descriptor; 
+  
+    arm_dcache_flush();
+    invalidate_tlb();
+    arm_branch_target_cache_invalidate();
+    _ARM_DSB();
+    _ARM_ISB();
+}
+
 
 
 

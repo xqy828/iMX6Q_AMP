@@ -11,7 +11,7 @@ extern int free_memory_end;
 
 char * __env[1] = { 0 };
 __attribute__ ((unused)) static char ** environ = __env;
-__attribute__ ((section (".cpu3softuart")))  unsigned int softuart[2] = {[0 ... 1] = 0x0};
+__attribute__ ((section (".cpu3softuart")))  __attribute__ ((aligned (4096))) unsigned int softuart[2] = {[0 ... 1] = 0x0};
 
 #define COMM_TX_FLAG (softuart[0])
 #define COMM_TX_DATA (softuart[1])

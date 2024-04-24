@@ -117,6 +117,21 @@ scu_join_smp:
   .endfunc
 
 
+  .global disable_strict_align_check
+  .func disable_strict_align_check
+disable_strict_align_check:
+  	/*Ray's note: disable strict alignment fault checking.
+ 	without disabling this, data abort will happen when accessing
+	the BPB structure of file system since it is packed.*/
+    
+  	push	{r0, lr}
+	
+	mrc p15, 0, r0, c1, c0, 0
+	bic r0, r0, #(0x1<<1) @clear A bit of SCTLR 
+	mcr p15, 0, r0, c1, c0, 0
+
+    pop {r0, pc}
+  .endfunc
 
 
     .end
