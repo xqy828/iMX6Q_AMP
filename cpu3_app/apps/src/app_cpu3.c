@@ -74,6 +74,18 @@ __attribute__ ((section (".cpu3main"))) void main(void)
     arm_dcache_invalidate();
     arm_branch_target_cache_invalidate();
     arm_branch_prediction_enable();        
+    /* enable scu Cache/TLB maintenance broadcast L2 cache and DDR 
+     * The SCU maintains coherency between the L1 data cache of each core
+     * Maintain data cache coherency between the Cortex-A9 processors.
+     * Initiate L2 AXI memory accesses.
+     * Arbitrate between Cortex-A9 processors requesting L2 accesses.
+     * Manage ACP accesses.
+     *
+     */
+    scu_enable();
+    scu_join_smp();
+    scu_enable_maintenance_broadcast(); 
+    
     mmu_init();
     Test_VirtualMMU(0xdeadbeef);
     disp("Enable MMU \n");

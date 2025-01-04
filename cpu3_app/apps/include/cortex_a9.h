@@ -45,7 +45,9 @@ void invalidate_tlb(void);
 void arm_branch_target_cache_invalidate(void);
 void arm_branch_prediction_enable(void);
 void arm_branch_prediction_disable(void);
+void scu_enable(void);
 void scu_join_smp(void);
+void scu_enable_maintenance_broadcast(void);
 void disable_strict_align_check(void);
 
 

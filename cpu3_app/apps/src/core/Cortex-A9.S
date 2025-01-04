@@ -101,6 +101,21 @@ arm_branch_prediction_disable:
   bx      lr
   .endfunc
 
+.global scu_enable
+  @ void scu_enable(void)
+  @ Enables the SCU
+  .func scu_enable
+scu_enable:
+
+  mrc     p15, 4, r0, c15, c0, 0  @ Read periph base address
+
+  ldr     r1, [r0, #0x0]          @ Read the SCU Control Register
+  orr     r1, r1, #0x1            @ Set bit 0 (The Enable bit)
+  str     r1, [r0, #0x0]          @ Write back modifed value
+
+  bx      lr
+  .endfunc
+
   .global  scu_join_smp
   @ void scu_join_smp(void)
   @ Set this CPU as participating in SMP
@@ -112,6 +127,20 @@ scu_join_smp:
   mrc     p15, 0, r0, c1, c0, 1   @ Read ACTLR
   orr     r0, r0, #0x040          @ Set bit 6
   mcr     p15, 0, r0, c1, c0, 1   @ Write ACTLR
+
+  bx      lr
+  .endfunc
+
+  .global scu_enable_maintenance_broadcast
+  @ void scu_enable_maintenance_broadcast(void)
+  @ Enable the broadcasting of cache & TLB maintenance operations
+  @ When enabled AND in SMP, broadcast all "inner sharable"
+  @ cache and TLM maintenance operations to other SMP cores
+  .func scu_enable_maintenance_broadcast
+scu_enable_maintenance_broadcast:
+  mrc     p15, 0, r0, c1, c0, 1   @ Read Aux Ctrl register
+  orr     r0, r0, #0x01           @ Set the FW bit (bit 0)
+  mcr     p15, 0, r0, c1, c0, 1   @ Write Aux Ctrl register
 
   bx      lr
   .endfunc
