@@ -89,7 +89,6 @@ __attribute__ ((section (".cpu3main"))) void main(void)
     mmu_init();
     Test_VirtualMMU(0xdeadbeef);
     disp("Enable MMU \n");
-    arm_dcache_invalidate();
     SetTlbAttributes((unsigned int)&softuart[0],0x1,0x32);
     mmu_enable();
     disp("Enable SIMD VFP \n");
