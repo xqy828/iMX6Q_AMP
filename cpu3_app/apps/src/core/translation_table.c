@@ -302,8 +302,8 @@ void mmu_enable(void)
     uint32_t sctlr;
     _arm_mrc(15, 0, sctlr, 1, 0, 0);
     
-    // set MMU enable bit 
-    sctlr |= BM_SCTLR_M;
+    // set MMU enable bit,enable I-cache and D-cache 
+    sctlr |= (BM_SCTLR_M | BM_SCTLR_I | BM_SCTLR_C);
 
     // write modified SCTLR
     _arm_mcr(15, 0, sctlr, 1, 0, 0);
