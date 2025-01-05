@@ -54,7 +54,7 @@ ENTRY(_start)
 #define MAX_HAB_CSF_DATA_SIZE 8K
 
 // Size of stacks section
-#define STACK_SIZE 48K
+#define STACK_SIZE 0xA00000
 
 #define HEAP_SIZE 16M
 
