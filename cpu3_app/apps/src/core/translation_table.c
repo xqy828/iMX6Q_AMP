@@ -212,7 +212,7 @@ void mmu_table_init(void)
     /* 0x02A0_0000---------0x02DF_FFFF  |  4 MB     |   IPU-2                                    |*/
     mmu_l1_l2_map(0x02a00000, 0x02a00000,0x400000,0x001,0x436);
     /* 0x0800_0000---------0x0FFF_FFFF  |  128 MB   |   EIM—(NOR/SRAM)                           |*/
-    mmu_l1_l2_map(0x08000000, 0x0800000,0x8000000,0x001,0x436);
+    mmu_l1_l2_map(0x08000000, 0x08000000,0x8000000,0x001,0x436);
     /* 0x1000_0000---------0xFFFF_FFFF  |  3840 MB  |   MMDC—DDR Controller.                     |*/
     mmu_l1_l2_map(0x10000000, 0x10000000,0xf0000000,0x1e1,0x576);// Shareable, Outer and Inner Write-Back, Write-Allocate cache 
     //mmu_l1_l2_map(0x10000000, 0x10000000,0xf0000000,0x1e1,0x7e);// no-Shareable, Outer and Inner Write-Back, Write-Allocate cache 
