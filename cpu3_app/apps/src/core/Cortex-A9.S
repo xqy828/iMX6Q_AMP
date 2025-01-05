@@ -66,7 +66,7 @@ disable_l1_caches:
     .global invalidate_tlb
     .func invalidate_tlb
 invalidate_tlb:
-    mov r0,#1
+    mov r0,#0
     mcr p15,0,r0,c8,c7,0
     dsb
     bx lr
