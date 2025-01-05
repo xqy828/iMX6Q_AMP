@@ -54,33 +54,70 @@ Start Address       End Address  |  SIZE     |   Description                    
 
 typedef union mmu_l1_entry
 {
-    uint32_t u;
+    unsigned int u;
     struct {
-        //uint32_t id:2;           //!< ID translation table entry format
-        //uint32_t sbz:3;
-        //uint32_t domain:4;
-        //uint32_t p:1;       
-        uint32_t l1_attr:10;
-        uint32_t l2_address:22;// Level 2 Descriptor Base Address
+        unsigned int l1_attr:10;
+        unsigned int l2_address:22;// Level 2 Descriptor Base Address
     };
 } mmu_l1_entry_t;
 
 typedef union mmu_l2_entry
 {
-    uint32_t u;
+    unsigned int u;
     struct {
-        //uint32_t id:2;           //!< ID translation table entry format
-        //uint32_t b:1;
-        //uint32_t c:1;
-        //uint32_t ap:2;
-        //uint32_t tex:3;
-        //uint32_t apx:1;
-        //uint32_t s:1;
-        //uint32_t ng:1;
-        uint32_t l2_attr:12;
-        uint32_t address:20;// Small Page Base Address
+        unsigned int l2_attr:12;
+        unsigned int address:20;// Small Page Base Address
     };
 } mmu_l2_entry_t;
+
+typedef struct 
+{
+    unsigned int physicalStartAddress;
+    unsigned int physicalEndAddress;
+    unsigned int l1_attr;
+    unsigned int l2_attr;
+}PlatformMemoryMap;
+
+PlatformMemoryMap gChipMemoryMap[] = {
+    {0x00000000, 0x00017FFF, 0x001, 0x636},// Boot ROM (ROMCP) 
+    {0x00018000, 0x000FFFFF, 0x000, 0x000},// Reserved
+    {0x00100000, 0x00103FFF, 0x001, 0x436},// CAAM (16 KB secure RAM)
+    {0x00104000, 0x0010FFFF, 0x000, 0x000},// Reserved
+    {0x00110000, 0x00111FFF, 0x001, 0x436},// APBH-Bridge-DMA 
+    {0x00112000, 0x00113FFF, 0x001, 0x436},// GPMI
+    {0x00114000, 0x00117FFF, 0x001, 0x436},// BCH
+    {0x00118000, 0x0011FFFF, 0x000, 0x000},// Reserved
+    {0x00120000, 0x00128FFF, 0x001, 0x436},// HDMI
+    {0x00129000, 0x0012FFFF, 0x000, 0x000},// Reserved
+    {0x00130000, 0x00133FFF, 0x001, 0x436},// GPU 3D 
+    {0x00134000, 0x00137FFF, 0x001, 0x436},// GPU 2D (GC320)
+    {0x00138000, 0x0013BFFF, 0x001, 0x436},// DTCP
+    {0x0013C000, 0x001FFFFF, 0x000, 0x000},// Reserved
+    {0x00200000, 0x002FFFFF, 0x001, 0x436},// GPV_2 PL301 (per1) configuration port 
+    {0x00300000, 0x003FFFFF, 0x001, 0x436},// GPV_3 PL301 (per2) configuration port
+    {0x00400000, 0x007FFFFF, 0x000, 0x000},// Reserved
+    {0x00800000, 0x008FFFFF, 0x001, 0x436},// GPV_4 PL301 (fast3) configuration port
+    {0x00900000, 0x0093FFFF, 0x1e1, 0x13e},// OCRAM 256 KB 
+    {0x00940000, 0x009FFFFF, 0x1e1, 0x13e},// OCRAM aliased
+    {0x00A00000, 0x00A01FFF, 0x001, 0x436},// ARM MP
+    {0x00A02000, 0x00A02FFF, 0x001, 0x436},// PL310 (L2 cache controller)
+    {0x00A03000, 0x00AFFFFF, 0x000, 0x000},// Reserved
+    {0x00B00000, 0x00BFFFFF, 0x001, 0x436},// GPV_0 PL301 (fast2) configuration port
+    {0x00C00000, 0x00CFFFFF, 0x001, 0x436},// GPV_1 PL301 (fast1)
+    {0x00D00000, 0x00FFFFFF, 0x000, 0x000},// Reserved
+    {0x01000000, 0x01FFBFFF, 0x001, 0x436},// PCIe
+    {0x01FFC000, 0x01FFFFFF, 0x001, 0x436},// PCIe registers
+    {0x02000000, 0x020FFFFF, 0x001, 0x436},// Peripheral IPs via AIPS-1
+    {0x02100000, 0x021FFFFF, 0x001, 0x436},// Peripheral IPs via AIPS-2 
+    {0x02200000, 0x02203FFF, 0x001, 0x436},// SATA
+    {0x02204000, 0x02207FFF, 0x001, 0x436},// OpenVG (GC355)
+    {0x02208000, 0x0220BFFF, 0x001, 0x436},// MIPI_HSI
+    {0x0220C000, 0x023FFFFF, 0x000, 0x000},// Reserved
+    {0x02600000, 0x029FFFFF, 0x001, 0x436},// IPU-1
+    {0x02A00000, 0x02DFFFFF, 0x001, 0x436},// IPU-2 
+    {0x08000000, 0x0FFFFFFF, 0x001, 0x436},// EIM-(NOR/SDRAM)
+    {0x10000000, 0xFFFFFFFF, 0x1e1, 0x576},// MMDC-DDR Controller
+};
 
 
 extern char __mmu_l1_tbl_start;
@@ -90,7 +127,7 @@ extern char __mmu_l2_tbl_start;
 //uint32_t *l2_table = (uint32_t *)&__mmu_l2_tbl_start;
 
 __attribute__ ((section (".mmu_l1_tbl"))) unsigned int l1_table[MMU_L1_TABLE_ITEM_NUM] = {[0 ... (MMU_L1_TABLE_ITEM_NUM - 1)] = 0x0};
-__attribute__ ((section (".mmu_l2_tbl"))) unsigned int l2_table[MMU_L2_TABLE_ITEM_NUM] = {[0 ... (MMU_L1_TABLE_ITEM_NUM - 1)] = 0x0};
+__attribute__ ((section (".mmu_l2_tbl"))) unsigned int l2_table[MMU_L2_TABLE_ITEM_NUM] = {[0 ... (MMU_L2_TABLE_ITEM_NUM - 1)] = 0x0};
 
 mmu_l1_entry_t l1_entry;
 mmu_l2_entry_t l2_entry;
@@ -127,7 +164,6 @@ static void mmu_l1_l2_map(unsigned int pa_start, unsigned int va_start,unsigned 
         
         l2_entry.address = (pa & 0xfffff000) >> 12;
         l2_table[l2_index + l1_index * 256] = l2_entry.u;
-        
         pa = pa + 4*1024;//up 4k;     
         va = va + 4*1024;//up 4k;
     }
@@ -138,6 +174,7 @@ static void mmu_l1_l2_map(unsigned int pa_start, unsigned int va_start,unsigned 
 
 void mmu_table_init(void)
 {
+#if 0
     /* 0x0000_0000---------0x0001_7FFF  |  96 KB    |   Boot ROM (ROMCP)                         |*/
     mmu_l1_l2_map(0x00000000, 0x00000000,0x1800,0x001,0x636);// device APX=1 AP=11 read only 
     /* 0x0001_8000---------0x000F_FFFF  |  928 KB   |   Reserved                                 |*/
@@ -216,7 +253,26 @@ void mmu_table_init(void)
     /* 0x1000_0000---------0xFFFF_FFFF  |  3840 MB  |   MMDC—DDR Controller.                     |*/
     mmu_l1_l2_map(0x10000000, 0x10000000,0xf0000000,0x1e1,0x576);// Shareable, Outer and Inner Write-Back, Write-Allocate cache 
     //mmu_l1_l2_map(0x10000000, 0x10000000,0xf0000000,0x1e1,0x7e);// no-Shareable, Outer and Inner Write-Back, Write-Allocate cache 
-    disp("translation table init done \n");   
+#endif
+    unsigned int ItemLen = 0;
+    int idx = 0;
+    unsigned int virtualAddress = 0;
+    unsigned int physicalAddress = 0;
+    unsigned int length = 0;
+    unsigned int l1_attr = 0,l2_attr = 0;
+	
+    ItemLen = sizeof(gChipMemoryMap)/sizeof(gChipMemoryMap[0]);
+    for(idx = ItemLen - 1;idx >=0;idx--)
+    {
+        length = gChipMemoryMap[idx].physicalEndAddress - gChipMemoryMap[idx].physicalStartAddress + 1;
+        virtualAddress = gChipMemoryMap[idx].physicalStartAddress; 
+        physicalAddress  = gChipMemoryMap[idx].physicalStartAddress;
+        l1_attr = gChipMemoryMap[idx].l1_attr;
+        l2_attr = gChipMemoryMap[idx].l2_attr;
+        mmu_l1_l2_map(physicalAddress , virtualAddress , length ,l1_attr,l2_attr);
+    }
+
+    disp("%d Items translation table init done \n",idx);   
     return;
 }
 
@@ -268,31 +324,16 @@ void Test_VirtualMMU(unsigned int va)
 
 void mmu_init(void)
 {
-    unsigned int *table = (unsigned int *)(&__mmu_l1_tbl_start);
+    unsigned int table = (unsigned int)(&__mmu_l1_tbl_start);
     _arm_mcr(15,0,0,2,0,2);// write TTBCR reg
-    
+  
+    table |= 0x58; // tlb Outer-cacheable, WB 
     _arm_mcr(15,0,table,2,0,0);  // write table address to TTBR0
     
     unsigned int dacr = 0x55555555;// set client mode for all domains
     _arm_mcr(15,0,dacr,3,0,0);
     mmu_table_init();
 }
-
-
-unsigned int mmu_virtual2physical(unsigned int virtualAddress, unsigned int * physicalAddress)
-{
-
-    return 0;
-}
-
-
-unsigned int mmu_physical2virtual(unsigned int physicalAddress, unsigned int *virtualAddress)
-{
-
-
-    return 0;
-}
-
 
 void mmu_enable(void)
 {
@@ -360,6 +401,8 @@ void SetTlbAttributes(unsigned int phy_addr,unsigned int l1_attr,unsigned int l2
     _ARM_DSB();
     _ARM_ISB();
 }
+
+
 
 
 
