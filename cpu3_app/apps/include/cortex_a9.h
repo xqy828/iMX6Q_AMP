@@ -12,10 +12,15 @@
 #define _arm_mcr(coproc, opcode1, Rt, CRn, CRm, opcode2)	\
     asm volatile ("mcr p" #coproc ", " #opcode1 ", %[input], c" #CRn ", c" #CRm ", " #opcode2 "\n" :: [input] "r" (Rt))
 
+/* clock */
+
+#define ARM_CLK_ROOT                                       (792000000) // 792Mhz
+
 /*
     Cortex-A9 MPCore private memory region
     PERIPHBASE[31:13] offset
 */
+#define ARM_MP_ADDR                                         (0x00A00000)
 #define SCU_Registers                                       (0x0000) 
 #define Interrupt_Controller_Interfaces                     (0x0100)
 #define Global_Timer                                        (0x0200)
@@ -33,6 +38,20 @@
 #define Filtering_End_Address_Register                      (0x44)
 #define SCU_Access_Control_Register                         (0x50)
 #define SCU_Non_secure_Access_Control_Register              (0x54)
+
+/*
+ * Global_Timer reg offset
+ * 
+ */
+
+#define Global_Timer_Counter_low                            (0x00)                               
+#define Global_Timer_Counter_high                           (0x04) 
+#define Global_Timer_Control                                (0x08) 
+#define Global_Timer_Counter_Interrupt_status               (0x0c) 
+#define Comparator_value_low                                (0x10) 
+#define Comparator_value_high                               (0x14) 
+#define Auto_increment                                      (0x18) 
+
 
 void Enable_SIMD_VFP(void);
 int get_cpuid(void);

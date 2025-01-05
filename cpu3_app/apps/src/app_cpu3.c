@@ -4,29 +4,12 @@
 #include "public.h"
 #include "mmu.h"
 #include "arm_cache.h"
+#include "usleep.h"
 
-const unsigned int PLL1_CLK = 792000000;
 extern unsigned int TestNeon(void);
 extern void TestRoundData(unsigned int Row,unsigned int Line);
 extern unsigned int softuart[2];
-
 unsigned int process = 0xdeadbeef;
-
-void delay_short(volatile unsigned int n)
-{
-    while(n--)
-    {
-
-    }
-}
-
-void delay(volatile unsigned int n)
-{
-    while(n--)
-    {
-        delay_short(0xbbccf);
-    }
-}
 
 void data_abort_test(void)
 {
@@ -55,9 +38,11 @@ __attribute__ ((section (".cpu3main"))) void main(void)
     volatile unsigned int cnt = 0;
     unsigned int vbar_reg = 0;
     unsigned int cpsr_reg = 0;
+    
+
     disp("Build Time:%s-%s.\n",Date,Time);
     disp("float test pi = %lf\n",gdPi);
-    disp("CPU1 process debug addr:0x%x\n",&process);
+    disp("process debug addr:0x%x\n",&process);
     disable_mmu();// if enabled
     cpsr_reg = read_cpsr_reg();
     disp("cpsr reg = 0x%08lx\n",cpsr_reg);
@@ -85,14 +70,14 @@ __attribute__ ((section (".cpu3main"))) void main(void)
     scu_enable();
     scu_join_smp();
     scu_enable_maintenance_broadcast(); 
-    
+
     mmu_init();
-    Test_VirtualMMU(0xdeadbeef);
     disp("Enable MMU \n");
     SetTlbAttributes((unsigned int)&softuart[0],0x1,0x32);
     mmu_enable();
     disp("Enable SIMD VFP \n");
     Enable_SIMD_VFP();
+    SetGlobalTime(0);
     disp("Neon Test ...\n");
     TestNeon();
     disp("Normal Distribution Random number Test ...\n");
@@ -104,6 +89,6 @@ __attribute__ ((section (".cpu3main"))) void main(void)
         //data_abort_test();
         //prefectch_abort_test();
         cnt++;
-        delay(30);
+        usleep(1000*1000);
     }
 }
