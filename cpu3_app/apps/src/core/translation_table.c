@@ -80,31 +80,31 @@ typedef struct
 
 PlatformMemoryMap gChipMemoryMap[] = {
     {0x00000000, 0x00017FFF, 0x001, 0x636},// Boot ROM (ROMCP) 
-    {0x00018000, 0x000FFFFF, 0x000, 0x000},// Reserved
+    {0x00018000, 0x000FFFFF, 0x001, 0x000},// Reserved
     {0x00100000, 0x00103FFF, 0x001, 0x436},// CAAM (16 KB secure RAM)
     {0x00104000, 0x0010FFFF, 0x000, 0x000},// Reserved
     {0x00110000, 0x00111FFF, 0x001, 0x436},// APBH-Bridge-DMA 
     {0x00112000, 0x00113FFF, 0x001, 0x436},// GPMI
     {0x00114000, 0x00117FFF, 0x001, 0x436},// BCH
-    {0x00118000, 0x0011FFFF, 0x000, 0x000},// Reserved
+    {0x00118000, 0x0011FFFF, 0x001, 0x000},// Reserved
     {0x00120000, 0x00128FFF, 0x001, 0x436},// HDMI
-    {0x00129000, 0x0012FFFF, 0x000, 0x000},// Reserved
+    {0x00129000, 0x0012FFFF, 0x001, 0x000},// Reserved
     {0x00130000, 0x00133FFF, 0x001, 0x436},// GPU 3D 
     {0x00134000, 0x00137FFF, 0x001, 0x436},// GPU 2D (GC320)
     {0x00138000, 0x0013BFFF, 0x001, 0x436},// DTCP
-    {0x0013C000, 0x001FFFFF, 0x000, 0x000},// Reserved
+    {0x0013C000, 0x001FFFFF, 0x001, 0x000},// Reserved
     {0x00200000, 0x002FFFFF, 0x001, 0x436},// GPV_2 PL301 (per1) configuration port 
     {0x00300000, 0x003FFFFF, 0x001, 0x436},// GPV_3 PL301 (per2) configuration port
-    {0x00400000, 0x007FFFFF, 0x000, 0x000},// Reserved
+    {0x00400000, 0x007FFFFF, 0x001, 0x000},// Reserved
     {0x00800000, 0x008FFFFF, 0x001, 0x436},// GPV_4 PL301 (fast3) configuration port
     {0x00900000, 0x0093FFFF, 0x1e1, 0x13e},// OCRAM 256 KB 
     {0x00940000, 0x009FFFFF, 0x1e1, 0x13e},// OCRAM aliased
     {0x00A00000, 0x00A01FFF, 0x001, 0x436},// ARM MP
     {0x00A02000, 0x00A02FFF, 0x001, 0x436},// PL310 (L2 cache controller)
-    {0x00A03000, 0x00AFFFFF, 0x000, 0x000},// Reserved
+    {0x00A03000, 0x00AFFFFF, 0x001, 0x000},// Reserved
     {0x00B00000, 0x00BFFFFF, 0x001, 0x436},// GPV_0 PL301 (fast2) configuration port
     {0x00C00000, 0x00CFFFFF, 0x001, 0x436},// GPV_1 PL301 (fast1)
-    {0x00D00000, 0x00FFFFFF, 0x000, 0x000},// Reserved
+    {0x00D00000, 0x00FFFFFF, 0x001, 0x000},// Reserved
     {0x01000000, 0x01FFBFFF, 0x001, 0x436},// PCIe
     {0x01FFC000, 0x01FFFFFF, 0x001, 0x436},// PCIe registers
     {0x02000000, 0x020FFFFF, 0x001, 0x436},// Peripheral IPs via AIPS-1
@@ -112,7 +112,7 @@ PlatformMemoryMap gChipMemoryMap[] = {
     {0x02200000, 0x02203FFF, 0x001, 0x436},// SATA
     {0x02204000, 0x02207FFF, 0x001, 0x436},// OpenVG (GC355)
     {0x02208000, 0x0220BFFF, 0x001, 0x436},// MIPI_HSI
-    {0x0220C000, 0x023FFFFF, 0x000, 0x000},// Reserved
+    {0x0220C000, 0x023FFFFF, 0x001, 0x000},// Reserved
     {0x02600000, 0x029FFFFF, 0x001, 0x436},// IPU-1
     {0x02A00000, 0x02DFFFFF, 0x001, 0x436},// IPU-2 
     {0x08000000, 0x0FFFFFFF, 0x001, 0x436},// EIM-(NOR/SDRAM)
@@ -129,9 +129,6 @@ extern char __mmu_l2_tbl_start;
 __attribute__ ((section (".mmu_l1_tbl"))) unsigned int l1_table[MMU_L1_TABLE_ITEM_NUM] = {[0 ... (MMU_L1_TABLE_ITEM_NUM - 1)] = 0x0};
 __attribute__ ((section (".mmu_l2_tbl"))) unsigned int l2_table[MMU_L2_TABLE_ITEM_NUM] = {[0 ... (MMU_L2_TABLE_ITEM_NUM - 1)] = 0x0};
 
-mmu_l1_entry_t l1_entry;
-mmu_l2_entry_t l2_entry;
-
 /*
  * create identical mapping, va = pa
  */
@@ -144,8 +141,9 @@ static void mmu_l1_l2_map(unsigned int pa_start, unsigned int va_start,unsigned 
     unsigned int pa = 0;
     unsigned int num_pages = 0;
 
-    l1_entry.u = 0;
-    l2_entry.u = 0;
+    register mmu_l1_entry_t l1_entry = {0};
+    register mmu_l2_entry_t l2_entry = {0};
+
     va = va_start;
     pa = pa_start;
 
@@ -262,7 +260,7 @@ void mmu_table_init(void)
     unsigned int l1_attr = 0,l2_attr = 0;
 	
     ItemLen = sizeof(gChipMemoryMap)/sizeof(gChipMemoryMap[0]);
-    for(idx = ItemLen - 1;idx >=0;idx--)
+    for(idx = 0;idx < ItemLen;idx++)
     {
         length = gChipMemoryMap[idx].physicalEndAddress - gChipMemoryMap[idx].physicalStartAddress + 1;
         virtualAddress = gChipMemoryMap[idx].physicalStartAddress; 
