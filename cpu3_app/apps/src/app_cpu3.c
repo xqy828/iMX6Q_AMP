@@ -89,6 +89,6 @@ __attribute__ ((section (".cpu3main"))) void main(void)
         //data_abort_test();
         //prefectch_abort_test();
         cnt++;
-        usleep(1000*1000);
+        usdelay(1000*1000);
     }
 }

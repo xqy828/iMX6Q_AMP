@@ -5,6 +5,8 @@
 /* <<ARM® Cortex®-A9 MPCore Revision: r4p1 Technical Reference Manual>>
  * Global Timer is always clocked at half of the CPU frequency */
 #define COUNTS_PER_USECOND  (ARM_CLK_ROOT / (2U*1000000U))
+#define COUNTS_PER_SECOND   (ARM_CLK_ROOT / (2U))
+#define COUNTS_PER_MSECOND  (ARM_CLK_ROOT / (2U*1000U))
 
 /*
  * Global_Timer reg is not banked 
@@ -46,7 +48,7 @@ void GetGlobalTime(unsigned long long int *GlobalTime)
     *GlobalTime = (((unsigned long long int) high) << 32) | (unsigned long long int) low;
 }
 
-int usleep(unsigned long long int useconds)
+int usdelay(unsigned long long int useconds)
 {
     unsigned long long int ullEnd=0, ullCur=0;
 
@@ -59,7 +61,36 @@ int usleep(unsigned long long int useconds)
     return 0;
 }
 
+void SysTickElapseConvertToTime(tick_convert_type_t type,unsigned long long int tEnd,unsigned long long int tStart,unsigned int *ulTime)
+{
+    unsigned int tUsed = 0;
+    unsigned long long int ullTickElapse = 0;
+    
+    if(tEnd > tStart)
+    {
+        ullTickElapse = tEnd-tStart;
+    }
+    else
+    {
+        ullTickElapse = U64_MAX - tStart + tEnd;
+    }
 
+    switch(type)
+    {
+        case T_US: 
+            tUsed = (ullTickElapse)/(COUNTS_PER_USECOND);
+        break;
+        case T_MS:
+            tUsed = (ullTickElapse)/(COUNTS_PER_MSECOND);
+        break;
+        case T_S:
+            tUsed = (ullTickElapse)/(COUNTS_PER_SECOND);
+        break;
+        default : 
+            disp("invalid time type \n");
+            tUsed = 0;
+        break;
+    }
 
-
-
+    *ulTime = tUsed;
+}

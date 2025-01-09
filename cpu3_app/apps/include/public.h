@@ -12,6 +12,9 @@ do{\
     printf("[\033[0;31m-CPU%d-\033[0m]:%s-(%05d)]"format,cpuid,__FUNCTION__,__LINE__,##__VA_ARGS__);\
 }while(0)
 
+#define U32_MAX         (4294967295u)                                  
+#define U64_MAX         (18446744073709551615u)
+
 static inline void reg_write32(unsigned int Addr, unsigned int Value)
 {
     volatile unsigned int  *TempAddr = (volatile unsigned int *)Addr;
