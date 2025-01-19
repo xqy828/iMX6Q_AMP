@@ -57,6 +57,11 @@ ENTRY(_start)
 #define STACK_SIZE 0xA00000
 
 #define HEAP_SIZE 16M
+#define ABORT_STACK_SIZE            1024
+#define SUPERVISOR_STACK_SIZE       2048
+#define IRQ_STACK_SIZE              1024
+#define FIQ_STACK_SIZE              1024
+#define UNDEF_STACK_SIZE            1024
 
 // Size of the L1 page table.
 #define MMU_TBL_SIZE 16K
@@ -247,10 +252,33 @@ SECTIONS
     /* Region to contain exception handler stacks */
     .stacks (NOLOAD) :
     {
-        __stacks_start = .;
+        . = ALIGN(16);
+        _stack_end = .;
         . += STACK_SIZE;
-        __stacks_end = .;
-        top_of_stacks = .;
+        . = ALIGN(16);
+        _stack = .;
+        __stack = _stack;
+        . = ALIGN(16);
+        _irq_stack_end = .;
+        . += IRQ_STACK_SIZE;
+        . = ALIGN(16);
+        __irq_stack = .;
+        _supervisor_stack_end = .;
+        . += SUPERVISOR_STACK_SIZE;
+        . = ALIGN(16);
+        __supervisor_stack = .;
+        _abort_stack_end = .;
+        . += ABORT_STACK_SIZE;
+        . = ALIGN(16);
+        __abort_stack = .;
+        _fiq_stack_end = .;
+        . += FIQ_STACK_SIZE;
+        . = ALIGN(16);
+        __fiq_stack = .;
+        _undef_stack_end = .;
+        . += UNDEF_STACK_SIZE;
+        . = ALIGN(16);
+        __undef_stack = .;
     } > DDR
     
     _end = .;
