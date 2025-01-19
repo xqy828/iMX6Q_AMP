@@ -57,40 +57,38 @@ void *softuart(void)
     memset(str,0,MAX_STR*sizeof(uint8_t));
     for(;;)
     {//read
-    	if( (flag = *(volatile uint32_t *)(VirCpu3SoftUartBase + COMM_TX_FLAG_OFFSET)) )
+        if( (flag = *(volatile uint32_t *)(VirCpu3SoftUartBase + COMM_TX_FLAG_OFFSET)) )
         {
-        	value = *(volatile uint32_t *)(VirCpu3SoftUartBase + COMM_TX_DATA_OFFSET);
+            value = *(volatile uint32_t *)(VirCpu3SoftUartBase + COMM_TX_DATA_OFFSET);
 
-    		//process non-string type data
-        	if(flag > 1) 
+            //process non-string type data
+            if(flag > 1) 
             {
-        		printf("CPU3: 0x%08x = 0x%08x\n", (uint32_t)(VirCpu3SoftUartBase + COMM_TX_DATA_OFFSET), value);
-
-        	//process string type data
-        	} 
+                printf("CPU3: 0x%08x = 0x%08x\n", (uint32_t)(VirCpu3SoftUartBase + COMM_TX_DATA_OFFSET), value);
+                //process string type data
+            }
             else 
             {
-
-        		if(rcnt < MAX_STR) 
+                if(rcnt < MAX_STR) 
                 {
-        			str[rcnt++] = (uint8_t)value;
-        		}
-        		if(value == '\n') 
+                    str[rcnt++] = (uint8_t)value;
+                }
+                if(value == '\n') 
                 {
-        			if(rcnt != 0) 
+                    if(rcnt != 0) 
                     {
-        				str[rcnt-1] = '\0';
-        			} 
+                        str[rcnt-1] = '\0';
+                    }
                     else 
                     {
-        				str[0] = '\0';
-        			}
-        			printf("%s\n", str);
-        			rcnt = 0;
-        		}
-        	}
-    		*(volatile uint32_t *) (VirCpu3SoftUartBase + COMM_TX_FLAG_OFFSET) = 0;
-    	}
+                        str[0] = '\0';
+                    }
+                    printf("%s\n", str);
+                    rcnt = 0;
+                }
+            }
+            *(volatile uint32_t *) (VirCpu3SoftUartBase + COMM_TX_FLAG_OFFSET) = 0;
+        }
     }
 }
 
@@ -135,13 +133,13 @@ int SoftUartInit(void)
     if(rc != 0)
     {
         perror("soft urat thread create fail \n");
-        return -RET_NOK;
+        return RET_NOK;
     }
     rc = pthread_setname_np(pid,"t_softuart");
     if(rc != 0)
     {
         perror("t_softuart thread name  set fail \n");
-        return -RET_NOK;
+        return RET_NOK;
     }
     return RET_OK;
 }
