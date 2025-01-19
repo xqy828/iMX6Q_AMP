@@ -103,6 +103,9 @@
 #define GICD_SPENDSGIRn                                     (0xF20) // SGI Set-Pending Registers
 
 
+#define SCU_TMR_INT_ID		                                (29)	/* SCU Private Timer interrupt */
+
+
 
 void Enable_SIMD_VFP(void);
 int get_cpuid(void);

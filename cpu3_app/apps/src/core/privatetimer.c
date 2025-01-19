@@ -44,6 +44,17 @@ void ScuTimer_LoadTimer(unsigned int value)
     reg_write32((unsigned int)ARM_MP_ADDR + (unsigned int)Private_Timers_and_Watchdogs + (unsigned int)Prv_Timer_Load,value);
 }
 
+void ScuTimer_SetPrescaler(unsigned int value)
+{
+    unsigned int regdata = 0;
+    regdata = reg_read32((unsigned int)ARM_MP_ADDR + (unsigned int)Private_Timers_and_Watchdogs + (unsigned int)Prv_Timer_Control);
+
+    regdata &= ~(0xff00); 
+    regdata |= (value << 8);
+    
+    reg_write32((unsigned int)ARM_MP_ADDR + (unsigned int)Private_Timers_and_Watchdogs + (unsigned int)Prv_Timer_Control,regdata);
+}
+
 void ScuTimer_GetCounter(unsigned int *pValue)
 {
     unsigned int value = 0;

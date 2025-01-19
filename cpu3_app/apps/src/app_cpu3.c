@@ -5,6 +5,7 @@
 #include "mmu.h"
 #include "arm_cache.h"
 #include "usleep.h"
+#include "interrupt.h"
 
 extern unsigned int TestNeon(void);
 extern void TestRoundData(unsigned int Row,unsigned int Line);
@@ -82,7 +83,7 @@ __attribute__ ((section (".cpu3main"))) void main(void)
     TestNeon();
     disp("Normal Distribution Random number Test ...\n");
     TestRoundData(10,5);
-
+    SCU_TimerSetupInterrupt();
     for(;;)
     {
         disp("run times:0x%08x.\n",cnt);

@@ -8,6 +8,8 @@ void ScuTimer_EnableInterrupt(void);
 void ScuTimer_LoadTimer(unsigned int value);
 void ScuTimer_GetCounter(unsigned int *pValue);
 void ScuTimer_ClearInterruptStatus(void);
+void ScuTimer_SetPrescaler(unsigned int value);
+
 
 #endif
 

@@ -56,7 +56,7 @@ irq_handler:
     vmrs r1, FPEXC
     push {r1}
     
-    @bl  irq_interrupt            /* to do */
+    bl  irq_interrupt            /* to do */
      /* ARM VFP & NEON */
 	pop     {r1}
     vmsr    FPEXC, r1
