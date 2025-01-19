@@ -236,6 +236,14 @@ SECTIONS
         __bss_end__ = .;
     } > DDR
 
+    .heap (NOLOAD) :
+    {
+        /* define range of the malloc heap */
+        free_memory_start = ALIGN(32); /* malloc starts allocating from here */
+        . += HEAP_SIZE;
+        free_memory_end = .;
+    } > DDR
+
     /* Region to contain exception handler stacks */
     .stacks (NOLOAD) :
     {
@@ -245,10 +253,5 @@ SECTIONS
         top_of_stacks = .;
     } > DDR
     
-    /* define range of the malloc heap */
-    free_memory_start = ALIGN(32); /* malloc starts allocating from here */
-    . += HEAP_SIZE;
-    free_memory_end = .;
-
     _end = .;
 }
