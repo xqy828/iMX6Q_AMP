@@ -41,7 +41,7 @@
     .global _sys_exit
     .global _start
 
-    .global __stack
+    .global __system_stack
     .global __irq_stack
     .global __supervisor_stack
     .global __abort_stack
@@ -52,9 +52,9 @@
     .set Undef_stack,	__undef_stack
     .set FIQ_stack,		__fiq_stack
     .set Abort_stack,	__abort_stack
-    .set SPV_stack,		__supervisor_stack
+    .set SUP_stack,		__supervisor_stack
     .set IRQ_stack,		__irq_stack
-    .set SYS_stack,		__stack
+    .set SYS_stack,		__system_stack
 
     .code 32
     .section ".boot","ax"
@@ -84,57 +84,59 @@ _boot:
     ldr r1,=_start
     mcr p15, 0, r1, c12, c0, 0 @set VBAR
 
-	mrs	r0, cpsr			/* get the current PSR */
-	mvn	r1, #0x1f			/* set up the irq stack pointer */
-	and	r2, r1, r0
-	orr	r2, r2, #0x12			/* IRQ mode */
-	msr	cpsr, r2
-	ldr	r13,=IRQ_stack			/* IRQ stack pointer */
-	bic r2, r2, #(0x1 << 9)    		 /* Set EE bit to little-endian */
-	msr spsr_fsxc,r2
+    mrs	r0, cpsr                        /* get the current PSR */
+    mvn	r1, #0x1f                       /* set up the irq stack pointer */
+    and	r2, r1, r0
+    orr	r2, r2, #0x12                   /* IRQ mode */
+    msr	cpsr, r2
+    ldr	r13,=IRQ_stack                  /* IRQ stack pointer */
+    bic r2, r2, #(0x1 << 9)             /* Set EE bit to little-endian */
+    msr spsr_fsxc,r2
 
-	mrs	r0, cpsr			/* get the current PSR */
-	mvn	r1, #0x1f			/* set up the supervisor stack pointer */
-	and	r2, r1, r0
-	orr	r2, r2, #0x13			/* supervisor mode */
-	msr	cpsr, r2
-	ldr	r13,=SPV_stack			/* Supervisor stack pointer */
-	bic r2, r2, #(0x1 << 9)     		/* Set EE bit to little-endian */
-	msr spsr_fsxc,r2
+    mrs	r0, cpsr                        /* get the current PSR */
+    mvn	r1, #0x1f                       /* set up the Abort  stack pointer */
+    and	r2, r1, r0
+    orr	r2, r2, #0x17                   /* Abort mode */
+    msr	cpsr, r2
+    ldr	r13,=Abort_stack                /* Abort stack pointer */
+    bic r2, r2, #(0x1 << 9)             /* Set EE bit to little-endian */
+    msr spsr_fsxc,r2
 
-	mrs	r0, cpsr			/* get the current PSR */
-	mvn	r1, #0x1f			/* set up the Abort  stack pointer */
-	and	r2, r1, r0
-	orr	r2, r2, #0x17			/* Abort mode */
-	msr	cpsr, r2
-	ldr	r13,=Abort_stack		/* Abort stack pointer */
-	bic r2, r2, #(0x1 << 9)     		/* Set EE bit to little-endian */
-	msr spsr_fsxc,r2
+    mrs	r0, cpsr                        /* get the current PSR */
+    mvn	r1, #0x1f                       /* set up the FIQ stack pointer */
+    and	r2, r1, r0
+    orr	r2, r2, #0x11                   /* FIQ mode */
+    msr	cpsr, r2
+    ldr	r13,=FIQ_stack                  /* FIQ stack pointer */
+    bic r2, r2, #(0x1 << 9)             /* Set EE bit to little-endian */
+    msr spsr_fsxc,r2
 
-	mrs	r0, cpsr			/* get the current PSR */
-	mvn	r1, #0x1f			/* set up the FIQ stack pointer */
-	and	r2, r1, r0
-	orr	r2, r2, #0x11			/* FIQ mode */
-	msr	cpsr, r2
-	ldr	r13,=FIQ_stack			/* FIQ stack pointer */
-	bic r2, r2, #(0x1 << 9)    		/* Set EE bit to little-endian */
-	msr spsr_fsxc,r2
+    mrs	r0, cpsr                        /* get the current PSR */
+    mvn	r1, #0x1f                       /* set up the Undefine stack pointer */
+    and	r2, r1, r0
+    orr	r2, r2, #0x1b                   /* Undefine mode */
+    msr	cpsr, r2
+    ldr	r13,=Undef_stack                /* Undefine stack pointer */
+    bic r2, r2, #(0x1 << 9)             /* Set EE bit to little-endian */
+    msr spsr_fsxc,r2
 
-	mrs	r0, cpsr			/* get the current PSR */
-	mvn	r1, #0x1f			/* set up the Undefine stack pointer */
-	and	r2, r1, r0
-	orr	r2, r2, #0x1b			/* Undefine mode */
-	msr	cpsr, r2
-	ldr	r13,=Undef_stack		/* Undefine stack pointer */
-	bic r2, r2, #(0x1 << 9)     		/* Set EE bit to little-endian */
-	msr spsr_fsxc,r2
+    mrs	r0, cpsr                        /* get the current PSR */
+    mvn	r1, #0x1f                       /* set up the system stack pointer */
+    and	r2, r1, r0
+    orr	r2, r2, #0x1F                   /* SYS mode */
+    msr	cpsr, r2
+    ldr	r13,=SYS_stack                  /* SYS stack pointer */
+    bic r2, r2, #(0x1 << 9)             /* Set EE bit to little-endian */
+    msr spsr_fsxc,r2
 
-	mrs	r0, cpsr			/* get the current PSR */
-	mvn	r1, #0x1f			/* set up the system stack pointer */
-	and	r2, r1, r0
-	orr	r2, r2, #0x1F			/* SYS mode */
-	msr	cpsr, r2
-	ldr	r13,=SYS_stack			/* SYS stack pointer */
+    mrs	r0, cpsr                        /* get the current PSR */
+    mvn	r1, #0x1f                       /* set up the supervisor stack pointer */
+    and	r2, r1, r0
+    orr	r2, r2, #0x13                   /* supervisor mode */
+    msr	cpsr, r2
+    ldr	r13,=SUP_stack                  /* Supervisor stack pointer */
+    bic r2, r2, #(0x1 << 9)             /* Set EE bit to little-endian */
+    msr spsr_fsxc,r2
 
     /* init .bss */
     /* clear the .bss section (zero init) */

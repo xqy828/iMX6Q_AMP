@@ -74,20 +74,6 @@
 #define F_BIT        0x40    //!< When F bit is set, FIQ is disabled
 //@}
 
-//! @name Stack sizes
-//@{
-
-//! @brief Size of stacks for exceptions.
-#define EXCEPTION_STACK_SIZE 2048
-
-//! @brief Supervisor mode stack size.
-//!
-//! This stack is much larger because most application code runs in
-//! Supervisor mode.
-#define SVC_STACK_SIZE 8192
-
-//@}
-
 //! @name Instruction macros
 //@{
 #define _ARM_NOP()  asm volatile ("nop\n\t")

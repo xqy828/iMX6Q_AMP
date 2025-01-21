@@ -54,14 +54,14 @@ ENTRY(_start)
 #define MAX_HAB_CSF_DATA_SIZE 8K
 
 // Size of stacks section
-#define STACK_SIZE 0xA00000
-
 #define HEAP_SIZE 16M
-#define ABORT_STACK_SIZE            1024
-#define SUPERVISOR_STACK_SIZE       2048
-#define IRQ_STACK_SIZE              1024
-#define FIQ_STACK_SIZE              1024
-#define UNDEF_STACK_SIZE            1024
+
+#define SYSTEM_STACK_SIZE           2048
+#define ABORT_STACK_SIZE            2048
+#define SUPERVISOR_STACK_SIZE       0xA00000
+#define IRQ_STACK_SIZE              2048
+#define FIQ_STACK_SIZE              2048
+#define UNDEF_STACK_SIZE            2048
 
 // Size of the L1 page table.
 #define MMU_TBL_SIZE 16K
@@ -253,11 +253,11 @@ SECTIONS
     .stacks (NOLOAD) :
     {
         . = ALIGN(16);
-        _stack_end = .;
-        . += STACK_SIZE;
+        _system_stack_end = .;
+        . += SYSTEM_STACK_SIZE;
         . = ALIGN(16);
-        _stack = .;
-        __stack = _stack;
+        _system_stack = .;
+        __system_stack = _system_stack;
         . = ALIGN(16);
         _irq_stack_end = .;
         . += IRQ_STACK_SIZE;
