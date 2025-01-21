@@ -49,12 +49,12 @@
     .global __undef_stack
 
     /* Stack Pointer locations for boot code */
-    .set Undef_stack,	__undef_stack
-    .set FIQ_stack,		__fiq_stack
-    .set Abort_stack,	__abort_stack
-    .set SUP_stack,		__supervisor_stack
-    .set IRQ_stack,		__irq_stack
-    .set SYS_stack,		__system_stack
+    .set Undef_stack,   __undef_stack
+    .set FIQ_stack,     __fiq_stack
+    .set Abort_stack,   __abort_stack
+    .set SUP_stack,     __supervisor_stack
+    .set IRQ_stack,     __irq_stack
+    .set SYS_stack,     __system_stack
 
     .code 32
     .section ".boot","ax"
