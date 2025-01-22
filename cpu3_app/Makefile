@@ -2,6 +2,11 @@ WORK_DIR := $(shell pwd)
 OUTPUT := output
 HOST_ARCH :=$(shell arch)
 APP_SRC := apps/src
+
+THREADX_DIR := threadx-6.4.0_rel
+THREADX_ARCH := cortex_a9
+THREADX_TOOLCHAIN:= gnu
+
 CC_FLAGS += -Wall -Wno-unused-but-set-variable -Wno-format
 CC_FLAGS += -O0 -g -mno-unaligned-access -fdce 
 CC_FLAGS += -march=armv7-a -mtune=cortex-a9 -mapcs
@@ -22,6 +27,7 @@ ELF_NAME = $(PROG_NAME).elf
 MAP_NAME = $(PROG_NAME).map
 DIS_NAME = $(PROG_NAME).dis
 BIN_NAME = $(PROG_NAME).bin
+THREADX_LIB = $(OUTPUT)/tx.a
 
 OBJ_DIR = $(OUTPUT)/obj
 
@@ -64,6 +70,8 @@ LIBC_INCLUDE = $(CC_PREFIX)/$(CROSS_COMPILE_STRIP)/include
 LIBC_INCLUDE += $(CC_PREFIX)/$(CROSS_COMPILE_STRIP)/include/c++/$(CC_VERSION)
 
 APPSRC_INCLUDE :=$(WORK_DIR)/apps/include
+THREADX_COMMON_INCLUDE :=$(WORK_DIR)/$(THREADX_DIR)/common/inc
+THREADX_PORTS_INCLUDE :=$(WORK_DIR)/$(THREADX_DIR)/ports/$(THREADX_ARCH)/$(THREADX_TOOLCHAIN)/inc
 
 LDFLAGS = -lc -lgcc -u _printf_float -lm
 
@@ -75,7 +83,8 @@ SYSTEM_INC = \
 	-isystem '$(LIBC_INCLUDE)'
 
 INCLUDES += $(foreach dir, $(APPSRC_INCLUDE), -I$(dir))
-
+INCLUDES += $(foreach dir, $(THREADX_COMMON_INCLUDE), -I$(dir))
+INCLUDES += $(foreach dir, $(THREADX_PORTS_INCLUDE), -I$(dir))
 
 LD_FILE = $(WORK_DIR)/ldscript/amp_app.ld.S
 rel_ld_file = $(basename $(subst $(WORK_DIR)/,,$(abspath $(LD_FILE))))
@@ -86,15 +95,22 @@ SRCS_C := $(shell find $(APP_SRC) -name '*.c')
 SRCS_S := $(shell find $(APP_SRC) -name '*.S')
 SRCS_s := $(shell find $(APP_SRC) -name '*.s')
 
+THREADX_SRC_c :=$(shell find $(THREADX_DIR)/common/src -name "*.c")
+THREADX_SRC_S :=$(shell find $(THREADX_DIR)/ports/$(THREADX_ARCH)/$(THREADX_TOOLCHAIN)/src -name "*.S")
 
 OBJS := $(SRCS_C:%.c=$(OBJ_DIR)/%.o) $(SRCS_S:%.S=$(OBJ_DIR)/%.o) $(SRCS_s:%.s=$(OBJ_DIR)/%.o)
-
+THREADX_OBJS :=$(THREADX_SRC_c:%.c=$(OBJ_DIR)/THREADX_DIR/%.o) $(THREADX_SRC_S:%.S=$(OBJ_DIR)/THREADX_DIR/%.o) 
 
 DEP_F:= $(OBJS:%.o=%d)
+THREADX_F :=$(THREADX_OBJS:%.o=%d)
 
 .PHONY: src clean
 
-src: $(BIN_NAME) $(DIS_NAME)
+src: $(THREADX_LIB) $(BIN_NAME) $(DIS_NAME)
+
+$(THREADX_LIB):$(THREADX_OBJS)
+	$(AR) -r $@ $^ 
+	@echo $(THREADX_LIB) has been created
 
 $(ELF_NAME):$(OBJS) $(the_ld_file) 
 	$(LD) -Bstatic -nostdlib \
@@ -113,9 +129,20 @@ $(BIN_NAME):$(ELF_NAME)
 	@echo $(BIN_NAME) has been created	
 
 -include $(DEP_F)
+-include $(THREADX_F)
+
+$(OBJ_DIR)/THREADX_DIR/%.o:%.S
+	@echo "COMPILING THREADX SOURCE $< TO OBJECT $@"
+	@mkdir -p '$(@D)'
+	$(CC) $(INCLUDES) -mcpu=cortex-a9 -o $@ -c -g $^
+
+$(OBJ_DIR)/THREADX_DIR/%.o:%.c
+	@echo "COMPILING THREADX SOURCE $< TO OBJECT $@"	
+	@mkdir -p '$(@D)'
+	$(CC) $(INCLUDES) -mcpu=cortex-a9 -o $@ -c -g $^
 
 $(OBJ_DIR)/%.o:%.c
-	@echo "COMPILING SOURCE $< TO OBJECT $@"	
+	@echo "COMPILING SOURCE $< TO OBJECT $@"
 	@mkdir -p '$(@D)'
 	@$(CC) $(CFLAGS) $(SYSTEM_INC) $(INCLUDES) -o $@ -MMD -c $^
 
