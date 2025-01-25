@@ -5,7 +5,6 @@
     .global _boot
     .global data_abort_handler
     .global prefetch_abort_handler
-
     .extern  dump_regs
     .section .vectors,"ax"
 
@@ -43,11 +42,14 @@ _start:
 
     .text
 
-
+    .global __tx_irq_processing_return
     .global irq_handler
     .func irq_handler
 irq_handler:
-    stmdb   sp!,{r0-r3,r12,lr}      /* state save from compiled code*/
+    @stmdb   sp!,{r0-r3,r12,lr}      /* state save from compiled code*/
+    /* Jump to context save to save system context.  */
+    B       _tx_thread_context_save
+    __tx_irq_processing_return:
     /* ARM VFP & NEON */
     vpush {d0-d7}
     vpush {d16-d31}
@@ -55,6 +57,8 @@ irq_handler:
     push {r1}
     vmrs r1, FPEXC
     push {r1}
+    
+    DSB
     
     bl  irq_interrupt            /* to do */
      /* ARM VFP & NEON */
@@ -64,10 +68,11 @@ irq_handler:
     vmsr    FPSCR, r1
     vpop    {d16-d31}
     vpop    {d0-d7}
+    /* Jump to context restore to restore system context.  */
+    B       _tx_thread_context_restore
+    @ldmia   sp!,{r0-r3,r12,lr}      /* state restore from compiled code */
 
-    ldmia   sp!,{r0-r3,r12,lr}      /* state restore from compiled code */
-
-    subs    pc, lr, #4              /* adjust return */
+    @subs    pc, lr, #4              /* adjust return */
     .endfunc
 
     .global undefined_handler

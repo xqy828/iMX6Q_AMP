@@ -9,6 +9,7 @@
 
 extern unsigned int TestNeon(void);
 extern void TestRoundData(unsigned int Row,unsigned int Line);
+extern void application_main();
 extern unsigned int softuart[2];
 unsigned int process = 0xdeadbeef;
 
@@ -84,6 +85,7 @@ __attribute__ ((section (".cpu3main"))) void main(void)
     disp("Normal Distribution Random number Test ...\n");
     TestRoundData(10,5);
     SCU_TimerSetupInterrupt();
+    application_main();
     for(;;)
     {
         disp("run times:0x%08x.\n",cnt);

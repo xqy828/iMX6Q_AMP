@@ -31,4 +31,8 @@ void RegisterIrqHandler(unsigned int Irq,InterruptHandler IrqHandle);
 void RegisterScuGicHandler(ExceptionHandler Handle,void *data);
 void Gic_InterruptHandler(void);
 
+void local_irq_enable(void);
+void local_irq_disable(void);
+
+
 #endif

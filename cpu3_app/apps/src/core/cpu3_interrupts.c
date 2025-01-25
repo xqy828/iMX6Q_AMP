@@ -1,14 +1,17 @@
 #include "public.h"
 #include "cortex_a9.h"
+#include "asm_defines.h"
 #include "gic.h"
 #include "interrupt.h"
 #include "PrivateTimer.h"
 
-volatile int TimerExpired = 0;
+extern void _tx_timer_interrupt(void);
+
 void SCU_TimerHandler(void *arg)
 {
-    disp("in scu timer isr %d\n",TimerExpired++);
     ScuTimer_ClearInterruptStatus();
+    _ARM_DSB();
+    _tx_timer_interrupt();
 }
 
 void SCU_TimerSetupInterrupt(void)
@@ -27,7 +30,7 @@ void SCU_TimerSetupInterrupt(void)
     RegisterScuGicHandler((ExceptionHandler)Gic_InterruptHandler,NULL);
     ScuTimer_EnableAutoReload();
     ScuTimer_SetPrescaler(0);
-    ScuTimer_LoadTimer((ARM_CLK_ROOT / (2U)) * 2); //2s
+    ScuTimer_LoadTimer((ARM_CLK_ROOT / (2*1000))); //1ms Threadx tick
     ScuTimer_Start();
     Distributor_SetIrqEnable(SCU_TMR_INT_ID);
     ScuTimer_ClearInterruptStatus();

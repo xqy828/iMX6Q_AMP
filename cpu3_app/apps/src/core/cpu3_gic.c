@@ -211,5 +211,29 @@ void RegisterScuGicHandler(ExceptionHandler Handle,void *data)
     ExceptionRegisterHandler(EXCEPTION_ID_IRQ_INT,Handle,data);
 }
 
+void local_irq_enable(void)
+{
+    asm volatile(
+        "cpsie i\n"
+        : 
+        :
+        : "memory"
+        );
+}
+
+void local_irq_disable(void)
+{
+    asm volatile(
+        "cpsid i\n"
+        : 
+        :
+        : "memory"
+        );
+}
+
+
+
+
+
 
 

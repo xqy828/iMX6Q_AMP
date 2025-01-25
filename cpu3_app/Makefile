@@ -27,7 +27,7 @@ ELF_NAME = $(PROG_NAME).elf
 MAP_NAME = $(PROG_NAME).map
 DIS_NAME = $(PROG_NAME).dis
 BIN_NAME = $(PROG_NAME).bin
-THREADX_LIB = $(OUTPUT)/tx.a
+THREADX_LIB = $(OUTPUT)/libtx.a
 
 OBJ_DIR = $(OUTPUT)/obj
 
@@ -73,7 +73,7 @@ APPSRC_INCLUDE :=$(WORK_DIR)/apps/include
 THREADX_COMMON_INCLUDE :=$(WORK_DIR)/$(THREADX_DIR)/common/inc
 THREADX_PORTS_INCLUDE :=$(WORK_DIR)/$(THREADX_DIR)/ports/$(THREADX_ARCH)/$(THREADX_TOOLCHAIN)/inc
 
-LDFLAGS = -lc -lgcc -u _printf_float -lm
+LDFLAGS = -lc -lgcc -u _printf_float -lm -L$(OUTPUT) -ltx
 
 LDINC += -L '$(LIBGCC_LDPATH)' -L '$(LIBC_LDPATH)'
 
