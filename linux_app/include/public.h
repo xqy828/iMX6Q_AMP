@@ -37,12 +37,16 @@
 #define MALLOC(n,type) ((type*)malloc((n)*sizeof(type)))
 #define U32_MAX         (4294967295u)                                  
 #define U64_MAX         (18446744073709551615u)
+
+#if 0
 #define offset_of(TYPE,MEMBER)   ((size_t)&((TYPE*)0)->MEMBER)
+
 #define container_of(ptr,type,member)\
-    do{\
+do{\
     void *__mptr = (void*)(ptr);\
     ((type*)(__mptr - offset_of(type,member)));\
-    }while(0)
+}while(0)
+#endif
 
 #define MEM_B(X) (*((unsigned char *)(X)))
 #define MEM_W(X) (*((unsigned int *)(X)))
@@ -73,6 +77,43 @@ typedef enum
     Disable = 0,
     Enable,
 }SYS_ONOFF;
+
+
+#define ALIGNED(x) __attribute__((aligned(x)))
+
+#if defined(__aarch64__)
+#define L1_CACHE_LINE_SHIFT (6)
+#else
+#define L1_CACHE_LINE_SHIFT (5)
+#endif
+
+#define ___cacheline_aligned_smp    ALIGNED((1 << L1_CACHE_LINE_SHIFT))
+
+struct cacheline_padding
+{
+    char x[0];
+}___cacheline_aligned_smp;
+
+#define CACHELINE_PADDING(name)  struct cacheline_padding name 
+
+inline static void Imx_Assert(const char *func, const char *file,unsigned int line)
+{
+    printf("assert error:%s,%s,%d\r\n",func,file,line);
+    for(;;)
+    {;}
+}
+
+#define Imx_AssertVoid(Expression) \
+{\
+    if(Expression)\
+    {\
+        ;\
+    }\
+    else \
+    {\
+        Imx_Assert(__func__,__FILE__,__LINE__);\
+    }\
+}
 
  __attribute__((unused)) static S32 my_system(char *cmd)
 {
