@@ -340,8 +340,9 @@ void ringbuffer_reset(struct ringbuffer_t *rb)
 
 struct ringbuffer_t *ringbuffer_create(unsigned short size)
 {
-    struct ringbuffer_t *rb;
-    unsigned char *pool;
+    struct ringbuffer_t *rb = NULL;
+    unsigned char *pool = NULL;
+    int rc = 0;
 
     Imx_AssertVoid(size > 0);    
     Imx_AssertVoid((size & 0x03) == 0);
@@ -352,13 +353,15 @@ struct ringbuffer_t *ringbuffer_create(unsigned short size)
         goto exit;
     }
 
-    pool = calloc(1,size);
-    if (pool == NULL) 
+    size = roundup_pow_of_two(size);
+    rc = posix_memalign((void*)&pool,(1 << L1_CACHE_LINE_SHIFT),size);
+    if (rc != 0) 
     {
         free(rb);
         rb = NULL;
         goto exit;
     }
+    memset(pool,0x00,size);
     ringbuffer_init(rb, pool, size);
 
 exit:

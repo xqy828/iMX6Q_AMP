@@ -18,6 +18,7 @@
 #include <sys/wait.h>
 #include <errno.h>
 
+
 #define RET_OK 0
 #define RET_NOK 1
 
@@ -114,6 +115,79 @@ inline static void Imx_Assert(const char *func, const char *file,unsigned int li
         Imx_Assert(__func__,__FILE__,__LINE__);\
     }\
 }
+
+#define roundup_pow_of_two(n)\
+(\
+    __builtin_constant_p(n) ? (((n) == 1) ? 1 : (1ul << (__ilog2((n)-1) + 1))) : __roundup_pow_of_two(n)\
+)
+
+
+static inline unsigned long __ilog2(unsigned  long int n)
+{
+    unsigned long int i = 0;
+    if(n <= 1)
+    {
+        return 0;
+    }
+#if (__SIZEOF_LONG__ == 8)
+    if(n & 0xFFFFFFFF00000000)
+    {
+       i = i + 32;
+       n  = n >> 32;
+    }
+#endif
+    if( n & 0xFFFF0000)
+    {
+        i = i + 16;
+        n = n >> 16;
+    }
+    if( n & 0xFF00)
+    {
+        i = i + 8;
+        n = n >> 8;
+    }
+    if(n & 0xF0)
+    {
+        i  = i + 4;
+        n = n >> 4;
+    }
+    if(n & 0xC)
+    {
+        i = i + 2;
+        n = n >> 2;
+    }
+    if(n & 0x2)
+    {
+        i = i + 1;
+    }
+    return i;
+}
+
+static inline unsigned long __fls(unsigned long int n)
+{
+    int num = 0;
+#if defined (__aarch64__)
+    asm volatile("clz %0,%1":"=r"(num) :"r"(n));
+    return 64 - num;
+#else
+    asm volatile("clz %0,%1":"=r"(num) :"r"(n));
+    return 32 - num;
+#endif
+}
+
+static inline __attribute_const__ unsigned long __roundup_pow_of_two(unsigned long n)
+{
+    if(n == 0)
+    {
+        return 1;
+    }
+    if(n > (1ul << (sizeof(n)*8-1)))
+    {
+        return 0;
+    }
+    return 1ul << (__fls(n-1)); 
+}
+
 
  __attribute__((unused)) static S32 my_system(char *cmd)
 {
