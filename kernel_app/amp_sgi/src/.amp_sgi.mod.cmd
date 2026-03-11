@@ -1,0 +1,1 @@
+savedcmd_/home/linux/workspace/imx6q_amp/kernel_app/amp_sgi/src/amp_sgi.mod := printf '%s\n'   imx6q_amp_sgi.o | awk '!x[$$0]++ { print("/home/linux/workspace/imx6q_amp/kernel_app/amp_sgi/src/"$$0) }' > /home/linux/workspace/imx6q_amp/kernel_app/amp_sgi/src/amp_sgi.mod

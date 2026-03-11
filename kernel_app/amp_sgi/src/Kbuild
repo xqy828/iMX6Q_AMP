@@ -1,0 +1,12 @@
+# Kbuild
+# Indicate that this module should be compiled to the kernel Makefile, and the
+# files to use to compile it.
+$(SW_MODULE_NAME)-objs = $(patsubst %.c,%.o,$(filter %.c,$(SRC_FILES)))
+obj-m += $(SW_MODULE_NAME).o
+
+# Set the CFLAGS for compiling the module, adding the include flags. Note that
+# the src variable points to the module's directory.
+
+#INC_FLAGS = $(addprefix -I ,$(SRC_INC_DIRS))
+#ccflags-y = $(INC_FLAGS) -Werror
+
