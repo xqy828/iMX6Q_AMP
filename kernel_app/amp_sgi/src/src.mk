@@ -35,6 +35,6 @@ $(SRC_OUTPUT_OBJECT): $(SRC_OBJECT) $(OUTPUT_DIR)
 	@mv $(SRC_DIR)/*.symvers $(OBJ_DIR)
 	@mv $(SRC_DIR)/*.order $(OBJ_DIR)
 	@mv $(SRC_DIR)/*.mod.c $(OBJ_DIR)
-	@mv -f $(SRC_DIR)/.[^.]* $(OBJ_DIR)
+	@mv -f $(SRC_DIR)/.[!.]* $(OBJ_DIR)
 	
 	

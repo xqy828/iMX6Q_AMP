@@ -27,19 +27,19 @@ $(OUTPUT_DIR):
 
 #$(OBJ_DIR):
 #	$(shell mkdir -p $(OBJ_DIR))
-	
+
 clean:
 	@(if [ -d $(OBJ_DIR) ]; then\
 		rm -f $(OBJ_DIR)/*.o;\
 		rm -f $(OBJ_DIR)/*.mod.*;\
 		rm -f $(OBJ_DIR)/*.symvers;\
 		rm -f $(OBJ_DIR)/*.order;\
-		rm -rf $(OBJ_DIR)/.[^.]* ;\
+		find $(OBJ_DIR) -maxdepth 1 -name ".*" ! -name ".gitkeep" ! -name "." ! -name ".." -exec rm -rf {} + ;\
 	fi)
 	@(if [ -d $(OUTPUT_DIR) ]; then\
 		rm -f $(OUTPUT_DIR)/*.ko;\
 	fi)
 	@(rm -f $(SRC_DIR)/*.mod)
-.PHONY:
-	clean
+
+.PHONY: clean
 
