@@ -17,17 +17,19 @@
 #include <linux/device.h>
 #include <linux/irqchip/arm-gic.h>
 #include <linux/interrupt.h>
+#include <linux/workqueue.h>
 
-static DEFINE_PER_CPU(int, sgi_percpu_data);
 #define DEVICE_NAME "amp_sgi"
 #define DEVICE_NUM 1
 #define SGI_MAGIC   'z'
+#define CPU3_IPI_NUM (15)
 
 typedef struct
 {
     unsigned int soft_cpu3_intid;
-}ampsgi_param;
-
+    struct workqueue_struct *amp_sgi_wq;
+    struct work_struct amp_sgi_work;
+}Sgi_IrqCFg;
 
 typedef struct
 {
@@ -35,15 +37,17 @@ typedef struct
     struct cdev cdev;
     struct class *class;
     struct device *device;
-    ampsgi_param param;
+    Sgi_IrqCFg irq;
     struct fasync_struct *async_queue;
-    struct workqueue_struct *sgi_wq;
-}stru_ampsgi;
+}Sgi;
 
-static stru_ampsgi gstAmpSgiStru;
+static Sgi gstAmpSgi;
+Sgi_IrqCFg __percpu *AmpSgi_Irq;
+
 
 static int AmpSgi_open(struct inode *inode, struct file *filp)
 {
+    filp->private_data = &gstAmpSgi;
     printk(KERN_DEBUG "open amp sgi device success !\n");
     return 0;
 }
@@ -59,7 +63,7 @@ static long AmpSgi_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 
 static int AmpSgi_fasync(int fd, struct file *filp,int mode)
 {
-    return fasync_helper(fd,filp,mode,&gstAmpSgiStru.async_queue);    
+    return fasync_helper(fd,filp,mode,&gstAmpSgi.async_queue);    
 }
 
 static int AmpSgi_release(struct inode *inode, struct file *filp)
@@ -71,18 +75,16 @@ static int AmpSgi_release(struct inode *inode, struct file *filp)
 
 static irqreturn_t cpu3_sgi_kick_handle(int irq, void *dev_id)
 {
-    if(gstAmpSgiStru.async_queue != NULL)
-    {
-        printk("sgi %d kick cpu0\n",gstAmpSgiStru.param.soft_cpu3_intid);
-        kill_fasync(&gstAmpSgiStru.async_queue,SIGIO,POLL_IN);
-    }
-    else
-    {
-        printk("sgi %d kick but async_queue is null \n",gstAmpSgiStru.param.soft_cpu3_intid);
-    }
+    Sgi_IrqCFg *AmpSgi_Irq = dev_id;
+    printk("sgi %d kick cpu0\n",gstAmpSgi.irq.soft_cpu3_intid);
+    queue_work(AmpSgi_Irq->amp_sgi_wq,&AmpSgi_Irq->amp_sgi_work);
     return IRQ_HANDLED;
 }
 
+static void cpu3_sgi_kick_work_fn(struct work_struct *work)
+{
+    kill_fasync(&gstAmpSgi.async_queue,SIGIO,POLL_IN);
+}
 
 static const struct file_operations AmpSgi_fops=
 {
@@ -97,41 +99,43 @@ static int AmpSgi_probe(struct platform_device *pdev)
 {
     int rc = 0;
     printk(KERN_DEBUG "amp sgi tree probe  . . . \n");
-
     // default SGI ID value 
-    gstAmpSgiStru.param.soft_cpu3_intid = 15;
-    printk(KERN_DEBUG "amp sgi cpu3_sgi_intid=%d \n",gstAmpSgiStru.param.soft_cpu3_intid);
-
-    rc = request_percpu_irq(gstAmpSgiStru.param.soft_cpu3_intid, cpu3_sgi_kick_handle,"cpu3_kick_cpu0", &sgi_percpu_data);
+    gstAmpSgi.irq.soft_cpu3_intid = CPU3_IPI_NUM;
+    printk(KERN_DEBUG "amp sgi cpu3_sgi_intid=%d \n",gstAmpSgi.irq.soft_cpu3_intid);
+    AmpSgi_Irq = &gstAmpSgi.irq;
+    rc = request_percpu_irq(gstAmpSgi.irq.soft_cpu3_intid, cpu3_sgi_kick_handle,"cpu3_kick_cpu0", AmpSgi_Irq);
     if(rc != 0)
     {
-        dev_err(&pdev->dev,"failed request IRQ %d \n",gstAmpSgiStru.param.soft_cpu3_intid);
+        dev_err(&pdev->dev,"failed request IRQ %d \n",gstAmpSgi.irq.soft_cpu3_intid);
     }
 
-    printk(KERN_DEBUG "amp sgi cpu3_sgi_intid=%d,register. \n",gstAmpSgiStru.param.soft_cpu3_intid);
+    printk(KERN_DEBUG "amp sgi cpu3_sgi_intid=%d,register. \n",gstAmpSgi.irq.soft_cpu3_intid);
 
-    rc = alloc_chrdev_region(&gstAmpSgiStru.devid,0, DEVICE_NUM, DEVICE_NAME);
+	INIT_WORK(&AmpSgi_Irq->amp_sgi_work, cpu3_sgi_kick_work_fn);
+    AmpSgi_Irq->amp_sgi_wq = create_workqueue("cpu3_sgi_kick");
+
+    rc = alloc_chrdev_region(&gstAmpSgi.devid,0, DEVICE_NUM, DEVICE_NAME);
     if(rc !=0)
     {
         dev_err(&pdev->dev,"unable to allocate device num \n");
     }
     
-    gstAmpSgiStru.cdev.owner = THIS_MODULE;
-    cdev_init(&gstAmpSgiStru.cdev,&AmpSgi_fops);
-    rc = cdev_add(&gstAmpSgiStru.cdev,gstAmpSgiStru.devid,1);
+    gstAmpSgi.cdev.owner = THIS_MODULE;
+    cdev_init(&gstAmpSgi.cdev,&AmpSgi_fops);
+    rc = cdev_add(&gstAmpSgi.cdev,gstAmpSgi.devid,1);
     if(rc !=0)
     {
         dev_err(&pdev->dev,"unable add cdev \n");
     }
 
-    gstAmpSgiStru.class = class_create(DEVICE_NAME);
-    if(IS_ERR(gstAmpSgiStru.class))
+    gstAmpSgi.class = class_create(DEVICE_NAME);
+    if(IS_ERR(gstAmpSgi.class))
     {
         dev_err(&pdev->dev,"unable create amp class \n");
     }
     
-    gstAmpSgiStru.device = device_create(gstAmpSgiStru.class,&pdev->dev,gstAmpSgiStru.devid,NULL,DEVICE_NAME);
-    if(IS_ERR(gstAmpSgiStru.device))
+    gstAmpSgi.device = device_create(gstAmpSgi.class,&pdev->dev,gstAmpSgi.devid,NULL,DEVICE_NAME);
+    if(IS_ERR(gstAmpSgi.device))
     {
         dev_err(&pdev->dev,"unable create amp device \n");
     }
@@ -140,11 +144,12 @@ static int AmpSgi_probe(struct platform_device *pdev)
 
 static int AmpSgi_remove(struct platform_device *pdev)
 {
-    device_unregister(gstAmpSgiStru.device);
-    class_destroy(gstAmpSgiStru.class);
-    cdev_del(&gstAmpSgiStru.cdev);
-    unregister_chrdev_region(gstAmpSgiStru.devid,DEVICE_NUM);
-    free_percpu_irq(gstAmpSgiStru.param.soft_cpu3_intid, &sgi_percpu_data);
+    device_unregister(gstAmpSgi.device);
+    class_destroy(gstAmpSgi.class);
+    cdev_del(&gstAmpSgi.cdev);
+    unregister_chrdev_region(gstAmpSgi.devid,DEVICE_NUM);
+    free_percpu_irq(gstAmpSgi.irq.soft_cpu3_intid, AmpSgi_Irq);
+    destroy_workqueue(AmpSgi_Irq->amp_sgi_wq); 
     return 0;
 }
 
