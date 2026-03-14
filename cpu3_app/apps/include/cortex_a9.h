@@ -104,7 +104,7 @@
 
 
 #define SCU_TMR_INT_ID		                                (29)	/* SCU Private Timer interrupt */
-
+#define SCU_COREDUMP_SGI_ID                                 (15)    /* SCU Coredump SGI interrupt kick CPU 0 */
 
 
 void Enable_SIMD_VFP(void);

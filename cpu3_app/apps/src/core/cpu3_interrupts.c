@@ -38,4 +38,9 @@ void SCU_TimerSetupInterrupt(void)
     CpuCore_SetCpsrEnableIrq();
 }
 
-
+int SCU_SendSgi2Cpu0(void)
+{
+    int rc = 0;
+    rc = ScuGic_SendSoftwareIrq(SCU_COREDUMP_SGI_ID,0);
+    return rc;
+}
