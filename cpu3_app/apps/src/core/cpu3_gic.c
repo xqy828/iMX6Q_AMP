@@ -234,12 +234,14 @@ void local_irq_disable(void)
 int ScuGic_SendSoftwareIrq(unsigned int irq,unsigned int cpu_id)
 {
     unsigned int mask = 0;
+    unsigned int cpu_mask;
     if((irq > 16) || (cpu_id > 255))
     {
         disp("irq or cpu id is invalid \n");
         return -1;
     }
-    mask = ((cpu_id << 16) | irq) & (SCUGIC_SGI_TRIG_CPU_MASK | SCUGIC_SGI_TRIG_INTID_MASK); 
+    cpu_mask = (0x1 << cpu_id) & 0xFF;
+    mask = ((cpu_mask << 16) | irq) & (SCUGIC_SGI_TRIG_CPU_MASK | SCUGIC_SGI_TRIG_INTID_MASK); 
     reg_write32((unsigned int)ARM_MP_ADDR + (unsigned int)Interrupt_Distributor + (unsigned int)GICD_SGIR,mask);
     return 0;
 }
