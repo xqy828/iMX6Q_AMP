@@ -114,61 +114,6 @@ I:  7298-Q: -8657|I: 28513-Q:  7192|I:-14294-Q:  4935|I:  3797-Q: 25403|I:-13302
            Thread 6 Counter:            0x000001f5
            Thread 7 Counter:            0x000001f4
 
-[-CPU3-]:thread_0_entry-(00191)]**** ThreadX Demonstration on NXP i.MX 6Quad **** 
-
-           Thread 0 Counter:            0x00000004
-           Thread 1 Counter:            0x006807ca
-           Thread 2 Counter:            0x00680790
-           Thread 3 Counter:            0x000002ef
-           Thread 4 Counter:            0x000002ee
-           Thread 5 Counter:            0x00000003
-           Thread 6 Counter:            0x000002ef
-           Thread 7 Counter:            0x000002ee
-
-[-CPU3-]:thread_0_entry-(00191)]**** ThreadX Demonstration on NXP i.MX 6Quad **** 
-
-           Thread 0 Counter:            0x00000005
-           Thread 1 Counter:            0x008ab621
-           Thread 2 Counter:            0x008ab5f2
-           Thread 3 Counter:            0x000003e9
-           Thread 4 Counter:            0x000003e8
-           Thread 5 Counter:            0x00000004
-           Thread 6 Counter:            0x000003e9
-           Thread 7 Counter:            0x000003e8
-
-[-CPU3-]:thread_0_entry-(00191)]**** ThreadX Demonstration on NXP i.MX 6Quad **** 
-
-           Thread 0 Counter:            0x00000006
-           Thread 1 Counter:            0x00ad64b9
-           Thread 2 Counter:            0x00ad6469
-           Thread 3 Counter:            0x000004e3
-           Thread 4 Counter:            0x000004e2
-           Thread 5 Counter:            0x00000005
-           Thread 6 Counter:            0x000004e3
-           Thread 7 Counter:            0x000004e2
-
-[-CPU3-]:thread_0_entry-(00191)]**** ThreadX Demonstration on NXP i.MX 6Quad **** 
-
-           Thread 0 Counter:            0x00000007
-           Thread 1 Counter:            0x00d0131d
-           Thread 2 Counter:            0x00d0131c
-           Thread 3 Counter:            0x000005dd
-           Thread 4 Counter:            0x000005dc
-           Thread 5 Counter:            0x00000006
-           Thread 6 Counter:            0x000005dd
-           Thread 7 Counter:            0x000005dc
-
-[-CPU3-]:thread_0_entry-(00191)]**** ThreadX Demonstration on NXP i.MX 6Quad **** 
-
-           Thread 0 Counter:            0x00000008
-           Thread 1 Counter:            0x00f2c17d
-           Thread 2 Counter:            0x00f2c16f
-           Thread 3 Counter:            0x000006d7
-           Thread 4 Counter:            0x000006d6
-           Thread 5 Counter:            0x00000007
-           Thread 6 Counter:            0x000006d7
-           Thread 7 Counter:            0x000006d6
-
 ```
 
 #### 参与贡献
