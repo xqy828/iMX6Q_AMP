@@ -91,10 +91,16 @@ static int amp_release(struct inode *inode, struct file *filp)
     return 0;
 }
 
-static irqreturn_t cpu3_sgi_kick_handle(int irq, void *dev_id)
+static irqreturn_t cpu3_sgi_kick_handle(int irq, void *data)
 {
-    struct imx6q_amp_pdata *pdata = dev_id;
+    struct imx6q_amp_pdata **pdata_ptr = data;
+    struct imx6q_amp_pdata *pdata = *pdata_ptr;
     int cpu = smp_processor_id();
+    if (!pdata) 
+    {
+        pr_err_ratelimited("SGI: pdata is NULL on CPU%d\n", cpu);
+        return IRQ_NONE;
+    }
     dev_info(pdata->dev, "virq sgi %d kick cpu:%d\n",pdata->virq_sgi,cpu);
     queue_work(pdata->irq_work.amp_sgi_wq,&pdata->irq_work.amp_sgi_work);
     return IRQ_HANDLED;
