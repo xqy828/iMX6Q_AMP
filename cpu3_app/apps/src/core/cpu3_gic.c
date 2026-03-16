@@ -235,7 +235,7 @@ int ScuGic_SendSoftwareIrq(unsigned int irq,unsigned int cpu_id)
 {
     unsigned int mask = 0;
     unsigned int cpu_mask;
-    if((irq > 16) || (cpu_id > 8))
+    if((irq > 16) || (cpu_id >= 8))
     {
         disp("irq or cpu id is invalid \n");
         return -1;
