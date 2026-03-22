@@ -14,6 +14,7 @@
 #include "public.h"
 #include "ampCtrl.h"
 #include "kernelmap.h"
+#include "xshell.h"
 
 char *str = "App start ...";
 extern int SoftUartInit();
@@ -27,6 +28,7 @@ S32 main (void)
     KernelMmapInit();
     InitCpu3();
     SoftUartInit();
+    XshellInit();
     for(;;)
     {
         msleep(30);
