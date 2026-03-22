@@ -24,7 +24,7 @@ ThreadX applications on cpu3**
 ![输入图片说明](doc/software_architecture.png)
 
 ### Test
-```
+```c
 [root@imx6q /usr/local/app]# ls
 SW_APP.out    cpu3_app.elf
 [root@imx6q /usr/local/app]# ./SW_APP.out &
@@ -115,6 +115,81 @@ I:  7298-Q: -8657|I: 28513-Q:  7192|I:-14294-Q:  4935|I:  3797-Q: 25403|I:-13302
            Thread 7 Counter:            0x000001f4
 
 ```
+### xshell debug tools
+```c
+[root@imx6q /mnt/emmc]# [  287.472044] imx6q-amp imx6q_amp: virq sgi 289 kick cpu:0
+[-CPU3-]:main-(00092)][  287.477420] imx6q-amp imx6q_amp: work executed on CPU 0
+run times:0x00000016.
+[root@imx6q /mnt/emmc]# xshell.out 
+Current tty: /dev/ttymxc0
+APP tty is redirect to /dev/ttymxc0
+xshell>>
+xshell>>Cpu3ElfHeader_Show
+ELF Header:
+  Magic:   7f 45 4c 46 01 01 01 00 00 00 00 00 00 00 00 00 
+  Class:                             ELF32
+  Data:                              2's complement, little endian
+  Version:                           1 (current)
+  OS/ABI:                            UNIX - System V
+  ABI Version:                       0
+  Type:                              EXEC (Executable file)
+  Machine:                           ARM
+  Version:                           0x1
+  Entry point address:               0x78000440
+  Start of program headers:          52 (bytes into file)
+  Start of section headers:          4673036 (bytes into file)
+  Size of this header:               52 (bytes)
+  Size of program headers:           32 (bytes)
+  Number of program headers:         4  Size of section headers:           40 (bytes)
+  Number of section headers:         31
+  Section header string table index: 30
+Section Headers:
+  [Nr]  Name             Type             Addr       Off        Size       ES   Flg Lk Inf Al
+  [ 0]                   NULL             0x00000000 0x00000000 0x00000000 0x00
+  [ 1] .ivt              PROGBITS         0x78000000 0x00001000 0x00000420 0x00
+  [ 2] .boot_data        PROGBITS         0x78000420 0x00001420 0x0000000c 0x00
+  [ 3] .dcd_hdr          PROGBITS         0x78000430 0x00001430 0x00000004 0x00
+  [ 4] .dcd_wrt_cmd      PROGBITS         0x78000434 0x00001434 0x00000004 0x00
+  [ 5] .text             PROGBITS         0x78000438 0x00001438 0x0001a6e0 0x00
+  [ 6] .cpu3main         PROGBITS         0x7801ab18 0x0001bb18 0x00000328 0x00
+  [ 7] .rodata           PROGBITS         0x7801ae40 0x0001be40 0x00001724 0x00
+  [ 8] .eh_frame         PROGBITS         0x7801c564 0x0001d564 0x00000028 0x00
+  [ 9] .ARM.exidx        ARM_EXIDX        0x7801c58c 0x0001d58c 0x00000008 0x00
+  [10] .data             PROGBITS         0x7801c598 0x0001d598 0x00018aec 0x00
+  [11] .cpu3softuart     PROGBITS         0x78036000 0x00037000 0x00000008 0x00
+  [12] .mmu_l1_table     PROGBITS         0x78038000 0x00038000 0x00004000 0x00
+  [13] .mmu_l2_table     PROGBITS         0x7803c000 0x0003c000 0x00400000 0x00
+  [14] .hab.data         NOBITS           0x78a00000 0x0043c000 0x00002000 0x00
+  [15] .bss              NOBITS           0x78a02000 0x0043c000 0x000095d8 0x00
+  [16] .heap             NOBITS           0x78a0b5d8 0x0043c000 0x01000000 0x00
+  [17] .stacks           NOBITS           0x79a0b5d8 0x0043c000 0x00a02808 0x00
+  [18] .ARM.attributes   ARM_ATTRIBUTES   0x00000000 0x0043c000 0x00000035 0x00
+  [19] .comment          PROGBITS         0x00000000 0x0043c035 0x00000044 0x01
+  [20] .debug_info       PROGBITS         0x00000000 0x0043c079 0x00019073 0x00
+  [21] .debug_abbrev     PROGBITS         0x00000000 0x004550ec 0x000056bc 0x00
+  [22] .debug_aranges    PROGBITS         0x00000000 0x0045a7a8 0x00000ac0 0x00
+  [23] .debug_line       PROGBITS         0x00000000 0x0045b268 0x000094a3 0x00
+  [24] .debug_str        PROGBITS         0x00000000 0x0046470b 0x00003f81 0x01
+  [25] .debug_frame      PROGBITS         0x00000000 0x0046868c 0x00003a2c 0x00
+  [26] .debug_rnglists   PROGBITS         0x00000000 0x0046c0b8 0x00000034 0x00
+  [27] .debug_line_str   PROGBITS         0x00000000 0x0046c0ec 0x000002be 0x01
+  [28] .symtab           SYMTAB           0x00000000 0x0046c3ac 0x00005910 0x10
+  [29] .strtab           STRTAB           0x00000000 0x00471cbc 0x00003013 0x00
+  [30] .shstrtab         STRTAB           0x00000000 0x00474ccf 0x0000013b 0x00
+
+Program Headers:
+  Type           Offset   VirtAddr   PhysAddr   FileSiz MemSiz  Flg Align
+  EXIDX          0x01d58c 0x7801c58c 0x7801c58c 0x00008 0x00008 R   0x4
+  LOAD           0x001000 0x78000000 0x78000000 0x36008 0x36008 RWE 0x1000
+  LOAD           0x038000 0x78038000 0x78038000 0x404000 0x404000 RW  0x4000
+  LOAD           0x000000 0x78a00000 0x78a00000 0x00000 0x1a0dde0 RW  0x1000
+addr:0x00016081.
+xshell>>
+xshell>>exit
+exit xshell !
+[root@imx6q /mnt/emmc]# 
+```
+
 
 #### 参与贡献
 
