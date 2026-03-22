@@ -23,6 +23,7 @@ ThreadX applications on cpu3**
 
 ![输入图片说明](doc/software_architecture.png)
 
+## amp ctrl  
 ### Test
 ```c
 [root@imx6q /usr/local/app]# ls
