@@ -14,7 +14,10 @@ ThreadX applications on cpu3**
 ### Reference Documents:  
  <<i.MX 6Dual/6Quad Applications Processor Reference Manual>>   
 ### Reference code:  
- iMX6_Platform_SDK  
+```c
+ iMX6_Platform_SDK     
+ https://github.com/antirez/linenoise    
+```
 ### Development board:  
 ![输入图片说明](doc/e9v2.jpg)
 ![输入图片说明](doc/e9v2_1.jpg)
@@ -116,7 +119,7 @@ I:  7298-Q: -8657|I: 28513-Q:  7192|I:-14294-Q:  4935|I:  3797-Q: 25403|I:-13302
            Thread 7 Counter:            0x000001f4
 
 ```
-## xshell debug tools  
+## xshell debug tools 
 ### Software architecture   
 ![输入图片说明](doc/xshell.png)    
 
