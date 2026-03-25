@@ -16,7 +16,8 @@ ThreadX applications on cpu3**
 ### Reference code:  
 ```c
  iMX6_Platform_SDK     
- https://github.com/antirez/linenoise    
+ https://github.com/antirez/linenoise 
+ https://github.com/eclipse-threadx/threadx 
 ```
 ### Development board:  
 ![输入图片说明](doc/e9v2.jpg)
