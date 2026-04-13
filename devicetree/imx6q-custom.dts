@@ -561,13 +561,13 @@
 					ads1282@0 {
 						compatible = "ti,ads1282";
 				        reg = <0>;
-						spi-max-frequency = <1000000>;
-						spi-cpha;
+						spi-max-frequency = <2000000>;
+						//spi-cpha;
 						pinctrl-names = "default";
 						pinctrl-0 = <&pinctrl_ads1282_reset &pinctrl_ads1282_sync &pinctrl_ads1282_pwdn &pinctrl_ads1282_irq>;
 						interrupt-parent = <&gpio5>; //
 						interrupts = <2 IRQ_TYPE_EDGE_FALLING>; // GPIO5_02，下降沿触发 DRDY
-						sync-gpios = <&gpio3 21 GPIO_ACTIVE_LOW>;
+						sync-gpios = <&gpio3 21 GPIO_ACTIVE_HIGH>;
 						reset-gpios = <&gpio3 20 GPIO_ACTIVE_LOW>;   // 复位引脚，低电平有效
 						pwdn-gpios = <&gpio3 19 GPIO_ACTIVE_LOW>; // 电源power down，低电平有效
 						drdy-gpios = <&gpio5 2 GPIO_ACTIVE_LOW>; // irq gpio
@@ -1259,7 +1259,7 @@
 						// ADS1282 中断引脚配置
 						pinctrl_ads1282_irq: ads1282irqgrp {
 							fsl,pins = <
-								MX6QDL_PAD_EIM_A25__GPIO5_IO02   0x1b0b0  // DRDY引脚，上拉输入
+								MX6QDL_PAD_EIM_A25__GPIO5_IO02   0x1b0a0  // DRDY引脚，上拉输入
 							>;
 						}; 
                         pinctrl_enet: enetgrp {
