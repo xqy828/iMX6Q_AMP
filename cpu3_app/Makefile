@@ -10,7 +10,7 @@ THREADX_TOOLCHAIN:= gnu
 CC_FLAGS += -Wall -Wno-unused-but-set-variable -Wno-format
 CC_FLAGS += -O0 -g -mno-unaligned-access -fdce 
 CC_FLAGS += -march=armv7-a -mtune=cortex-a9 -mapcs
-CC_FLAGS += -fno-common -ffreestanding -fno-builtin -static 
+CC_FLAGS += -fno-common -ffreestanding -fno-builtin -static -funwind-tables
 CC_FLAGS += -mfpu=neon-vfpv3 -ftree-vectorize -fno-math-errno -funsafe-math-optimizations -fno-signed-zeros -mfloat-abi=softfp
 CC_FLAGS += -marm
 C99_FLAGS += -std=gnu99 -fgnu89-inline
