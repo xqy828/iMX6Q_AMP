@@ -11,7 +11,7 @@ CC_FLAGS += -Wall -Wno-unused-but-set-variable -Wno-format
 CC_FLAGS += -O0 -g -mno-unaligned-access -fdce 
 CC_FLAGS += -march=armv7-a -mtune=cortex-a9 -mapcs
 CC_FLAGS += -fno-common -ffreestanding -fno-builtin -static -funwind-tables
-CC_FLAGS += -mfpu=neon-vfpv3 -ftree-vectorize -fno-math-errno -funsafe-math-optimizations -fno-signed-zeros -mfloat-abi=softfp
+CC_FLAGS += -mfpu=neon-vfpv3 -ftree-vectorize -fno-math-errno -funsafe-math-optimizations -fno-signed-zeros -mfloat-abi=hard
 CC_FLAGS += -marm
 C99_FLAGS += -std=gnu99 -fgnu89-inline
 
@@ -43,7 +43,7 @@ CROSS_COMPILE_STRIP := $(CROSS_COMPILE:%-=%)
 # Build tool names.
 CC = $(CROSS_COMPILE_PATH)$(CROSS_COMPILE)gcc
 CXX = $(CROSS_COMPILE_PATH)$(CROSS_COMPILE)g++
-LD = $(CROSS_COMPILE_PATH)$(CROSS_COMPILE)ld
+LD = $(CROSS_COMPILE_PATH)$(CROSS_COMPILE)gcc
 AS = $(CROSS_COMPILE_PATH)$(CROSS_COMPILE)as
 AR = $(CROSS_COMPILE_PATH)$(CROSS_COMPILE)ar
 OBJCOPY = $(CROSS_COMPILE_PATH)$(CROSS_COMPILE)objcopy
@@ -73,10 +73,10 @@ APPSRC_INCLUDE :=$(WORK_DIR)/apps/include
 THREADX_COMMON_INCLUDE :=$(WORK_DIR)/$(THREADX_DIR)/common/inc
 THREADX_PORTS_INCLUDE :=$(WORK_DIR)/$(THREADX_DIR)/ports/$(THREADX_ARCH)/$(THREADX_TOOLCHAIN)/inc
 
-LDFLAGS = -lc -lgcc -u _printf_float -lm -L$(OUTPUT) -ltx
+LDFLAGS = -mfloat-abi=hard -mfpu=neon-vfpv3 -mcpu=cortex-a9 -lc -lgcc -u _printf_float -lm -L$(OUTPUT) -ltx
 
-LDINC += -L '$(LIBGCC_LDPATH)' -L '$(LIBC_LDPATH)'
-
+#LDINC += -L '$(LIBGCC_LDPATH)' -L '$(LIBC_LDPATH)'
+LDINC :=
 SYSTEM_INC = \
 	-isystem '$(CC_INCLUDE)' \
 	-isystem '$(CC_INCLUDE_FIXED)' \
@@ -119,7 +119,7 @@ $(ELF_NAME):$(OBJS) $(the_ld_file)
 	$(OBJS) \
 	$(LDFLAGS) \
 	-o $@ \
-	-Map $(MAP_NAME) --cref
+	-Wl,-Map,$(MAP_NAME) -Wl,--cref
 	@echo $(ELF_NAME) has been created	
 $(DIS_NAME):$(ELF_NAME)
 	@$(OBJDUMP) -h -d $< > $@
@@ -134,12 +134,12 @@ $(BIN_NAME):$(ELF_NAME)
 $(OBJ_DIR)/THREADX_DIR/%.o:%.S
 	@echo "COMPILING THREADX SOURCE $< TO OBJECT $@"
 	@mkdir -p '$(@D)'
-	$(CC) $(INCLUDES) -mcpu=cortex-a9 -o $@ -c -g $^
+	$(CC) $(INCLUDES) $(CFLAGS) -o $@ -c -g $^
 
 $(OBJ_DIR)/THREADX_DIR/%.o:%.c
 	@echo "COMPILING THREADX SOURCE $< TO OBJECT $@"	
 	@mkdir -p '$(@D)'
-	$(CC) $(INCLUDES) -mcpu=cortex-a9 -o $@ -c -g $^
+	$(CC) $(INCLUDES) $(CFLAGS) -o $@ -c -g $^
 
 $(OBJ_DIR)/%.o:%.c
 	@echo "COMPILING SOURCE $< TO OBJECT $@"
