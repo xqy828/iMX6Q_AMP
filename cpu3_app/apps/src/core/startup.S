@@ -41,20 +41,20 @@
     .global _sys_exit
     .global _start
 
-    .global __system_stack
-    .global __irq_stack
-    .global __supervisor_stack
-    .global __abort_stack
-    .global __fiq_stack
-    .global __undef_stack
+    .global __system_stack_bottom
+    .global __irq_stack_bottom
+    .global __supervisor_stack_bottom
+    .global __abort_stack_bottom
+    .global __fiq_stack_bottom
+    .global __undef_stack_bottom
 
     /* Stack Pointer locations for boot code */
-    .set Undef_stack,   __undef_stack
-    .set FIQ_stack,     __fiq_stack
-    .set Abort_stack,   __abort_stack
-    .set SUP_stack,     __supervisor_stack
-    .set IRQ_stack,     __irq_stack
-    .set SYS_stack,     __system_stack
+    .set Undef_stack,   __undef_stack_bottom
+    .set FIQ_stack,     __fiq_stack_bottom
+    .set Abort_stack,   __abort_stack_bottom
+    .set SUP_stack,     __supervisor_stack_bottom
+    .set IRQ_stack,     __irq_stack_bottom
+    .set SYS_stack,     __system_stack_bottom
 
     .code 32
     .section ".boot","ax"

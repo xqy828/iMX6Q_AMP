@@ -2,8 +2,7 @@
     .global     _tx_thread_system_stack_ptr
     .global     _tx_initialize_unused_memory
     .global     _end
-    .global     _system_stack
-    .global      _system_stack_end
+    .global     __system_stack_bottom
 
 /* Define the 16-bit Thumb mode veneer for _tx_initialize_low_level for
    applications calling this function from to 16-bit Thumb mode.  */
@@ -29,7 +28,7 @@ $_tx_initialize_low_level:
     .type   _tx_initialize_low_level,function
     .cfi_startproc
 _tx_initialize_low_level:
-    LDR     r1, =_system_stack                  // Get pointer to stack area
+    LDR     r1, =__system_stack_bottom                  // Get pointer to stack area
     LDR     r2, =_tx_thread_system_stack_ptr    // Pickup stack pointer
     STR     r1, [r2]                            // Save the system stack
     

@@ -215,32 +215,31 @@ SECTIONS
     .stacks (NOLOAD) :
     {
         . = ALIGN(16);
-        _system_stack_end = .;
+        __system_stack_top = .;
         . += SYSTEM_STACK_SIZE;
         . = ALIGN(16);
-        _system_stack = .;
-        __system_stack = _system_stack;
+        __system_stack_bottom = .;
         . = ALIGN(16);
-        _irq_stack_end = .;
+        __irq_stack_top = .;
         . += IRQ_STACK_SIZE;
         . = ALIGN(16);
-        __irq_stack = .;
-        _supervisor_stack_end = .;
+        __irq_stack_bottom = .;
+        __supervisor_stack_top = .;
         . += SUPERVISOR_STACK_SIZE;
         . = ALIGN(16);
-        __supervisor_stack = .;
-        _abort_stack_end = .;
+        __supervisor_stack_bottom = .;
+        __abort_stack_top = .;
         . += ABORT_STACK_SIZE;
         . = ALIGN(16);
-        __abort_stack = .;
-        _fiq_stack_end = .;
+        __abort_stack_bottom = .;
+        __fiq_stack_top = .;
         . += FIQ_STACK_SIZE;
         . = ALIGN(16);
-        __fiq_stack = .;
-        _undef_stack_end = .;
+        __fiq_stack_bottom = .;
+        __undef_stack_top = .;
         . += UNDEF_STACK_SIZE;
         . = ALIGN(16);
-        __undef_stack = .;
+        __undef_stack_bottom = .;
     } > DDR
     
     _end = .;

@@ -77,8 +77,8 @@
 
 extern char __exidx_start;
 extern char __exidx_end;
-extern char _supervisor_stack_end;
-extern char __supervisor_stack;
+extern char __supervisor_stack_top;
+extern char __supervisor_stack_bottom;
 
 /* An item in the exception index table */
 struct unwind_idx {
@@ -148,8 +148,8 @@ static bool copy_in(void *dst, const void *src, size_t n)
 static inline void __noprof get_stack_hard_limits(unsigned long int *bottom ,unsigned long int *top)
 {	
 	/* The CPU finally runs in Supervisor mode. */
-	unsigned long stack_bottom = (unsigned long)_supervisor_stack_end;
-	unsigned long stack_top = (unsigned long)__supervisor_stack;
+	unsigned long stack_bottom = (unsigned long)__supervisor_stack_bottom;
+	unsigned long stack_top = (unsigned long)__supervisor_stack_top;
 	size_t stack_sz = stack_bottom - stack_top;
 	*top = stack_top;
 	*bottom = stack_bottom;	
