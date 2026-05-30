@@ -11,8 +11,10 @@ CC_FLAGS += -Wall -Wno-unused-but-set-variable -Wno-format
 CC_FLAGS += -O0 -g -mno-unaligned-access -fdce 
 CC_FLAGS += -march=armv7-a -mtune=cortex-a9 -mapcs
 CC_FLAGS += -fno-common -ffreestanding -fno-builtin -static -funwind-tables
-CC_FLAGS += -mfpu=neon-vfpv3 -ftree-vectorize -fno-math-errno -funsafe-math-optimizations -fno-signed-zeros -mfloat-abi=hard
+#CC_FLAGS += -mfpu=neon-vfpv3 -ftree-vectorize -fno-math-errno -funsafe-math-optimizations -fno-signed-zeros -mfloat-abi=hard
+CC_FLAGS += -mfpu=neon-vfpv3 -ftree-vectorize -fno-math-errno -funsafe-math-optimizations -fno-signed-zeros -mfloat-abi=softfp
 CC_FLAGS += -marm
+#CC_FLAGS += -mthumb 
 C99_FLAGS += -std=gnu99 -fgnu89-inline
 
 CFLAGS += $(CC_FLAGS)
@@ -59,8 +61,10 @@ CC_VERSION := $(shell $(CC) -dumpversion)
 CC_PREFIX := $(shell dirname "`which $(CC)`")/..
 
 # Standard library include paths.
-LIBGCC_LDPATH = $(CC_PREFIX)/lib/gcc/$(CROSS_COMPILE_STRIP)/$(CC_VERSION)
+#LIBGCC_LDPATH = $(CC_PREFIX)/lib/gcc/$(CROSS_COMPILE_STRIP)/$(CC_VERSION)/thumb/v7-a+simd/hard
+#LIBC_LDPATH = $(CC_PREFIX)/$(CROSS_COMPILE_STRIP)/lib/thumb/v7-a+simd/hard
 
+LIBGCC_LDPATH = $(CC_PREFIX)/lib/gcc/$(CROSS_COMPILE_STRIP)/$(CC_VERSION)
 LIBC_LDPATH = $(CC_PREFIX)/$(CROSS_COMPILE_STRIP)/lib
 
 # System header file include paths.
@@ -73,10 +77,11 @@ APPSRC_INCLUDE :=$(WORK_DIR)/apps/include
 THREADX_COMMON_INCLUDE :=$(WORK_DIR)/$(THREADX_DIR)/common/inc
 THREADX_PORTS_INCLUDE :=$(WORK_DIR)/$(THREADX_DIR)/ports/$(THREADX_ARCH)/$(THREADX_TOOLCHAIN)/inc
 
-LDFLAGS = -mfloat-abi=hard -mfpu=neon-vfpv3 -mcpu=cortex-a9 -lc -lgcc -u _printf_float -lm -L$(OUTPUT) -ltx
+#LDFLAGS = -mfloat-abi=hard -mfpu=neon-vfpv3 -mcpu=cortex-a9 -mthumb  -lc -lgcc -u _printf_float -lm -L$(OUTPUT) -ltx
+LDFLAGS = -mfloat-abi=softfp -mfpu=neon-vfpv3 -mcpu=cortex-a9 -marm -lc -lgcc -u _printf_float -lm -L$(OUTPUT) -ltx
 
-#LDINC += -L '$(LIBGCC_LDPATH)' -L '$(LIBC_LDPATH)'
-LDINC :=
+LDINC += -L '$(LIBGCC_LDPATH)' -L '$(LIBC_LDPATH)'
+#LDINC :=
 SYSTEM_INC = \
 	-isystem '$(CC_INCLUDE)' \
 	-isystem '$(CC_INCLUDE_FIXED)' \
