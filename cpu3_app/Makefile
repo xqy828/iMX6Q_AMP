@@ -126,6 +126,7 @@ $(ELF_NAME):$(OBJS) $(the_ld_file)
 	-o $@ \
 	-Wl,-Map,$(MAP_NAME) -Wl,--cref
 	@echo $(ELF_NAME) has been created	
+	@md5sum $(ELF_NAME) | awk '{print $$1}' | xargs -I {} echo "MD5: {}"
 $(DIS_NAME):$(ELF_NAME)
 	@$(OBJDUMP) -h -d $< > $@
 	@echo $(DIS_NAME) has been created
