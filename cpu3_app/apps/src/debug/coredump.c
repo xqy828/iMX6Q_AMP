@@ -27,6 +27,7 @@
 #include <stdbool.h>
 #include <elf32.h>
 #include <elf.h>
+#include "board_memory.h"
 #include "tick.h"
 
 #define ALIGN_UP(x, align_to)	(((x) + ((align_to)-1)) & ~((align_to)-1))
@@ -136,12 +137,10 @@ struct coredump_info_s
   size_t          size;
 };
 
-#ifdef CONFIG_BOARD_MEMORY_RANGE
 static struct memory_region_s g_memory_region[] =
-  {
-    CONFIG_BOARD_MEMORY_RANGE
-  };
-#endif
+{
+  {DDR_ORG,DDR_LEN,PF_R|PF_W|PF_X},
+};
 
 static const struct memory_region_s *g_regions;
 

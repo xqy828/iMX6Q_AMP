@@ -11,7 +11,7 @@
 // mx6dq and mx6sdl DDR memory starts at this address
 #define DDR_ORG 0x78000000
 
-#define DDR_LEN 128M
+#define DDR_LEN (128 * 1024 * 1024) //128M
 
 // Maximum size of the signed image
 #define MAX_IMAGE_SIZE 10M
