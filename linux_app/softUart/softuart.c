@@ -54,7 +54,7 @@ void *softuart(void)
     uint32_t len = 1;
     uint32_t flag=0;
     uint8_t str[MAX_STR];
-    int rcnt = 0;
+    //int rcnt = 0;
     printf("softuart thread start ...\r\n");
     memset(str,0,MAX_STR*sizeof(uint8_t));
     for(;;)
