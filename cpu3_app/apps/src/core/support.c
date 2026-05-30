@@ -9,14 +9,17 @@
 extern int free_memory_start;
 extern int free_memory_end;
 
+#define MAX_SIZE    (256u)
+#define MAX_STR     (256-8u)
 char * __env[1] = { 0 };
 __attribute__ ((unused)) static char ** environ = __env;
-__attribute__ ((section (".cpu3softuart")))  __attribute__ ((aligned (4096))) unsigned int softuart[2] = {[0 ... 1] = 0x0};
+__attribute__ ((section (".cpu3softuart")))  __attribute__ ((aligned (4096))) unsigned char softuart[MAX_SIZE] = {[0 ... MAX_SIZE-1] = 0x0};
 
 #define COMM_TX_FLAG (softuart[0])
-#define COMM_TX_DATA (softuart[1])
+#define COMM_TX_DATA (softuart[8])
+#define COMM_TX_DATA_LEN (softuart[4])
 
-static void myPutChar(char c)
+ __attribute__ ((used)) static void myPutChar(char c)
 {
     while(COMM_TX_FLAG);//wait other cpu consume previous value
     COMM_TX_DATA = (unsigned int)c;
@@ -49,11 +52,24 @@ int _write(int fd,char *ptr,int len)
 {
     int i = 0;
     UNUSED_PARA(fd);
+    i = len;
+
+    if(i > MAX_STR)
+    {
+        i = MAX_STR;
+    }
+
+    while(*(volatile unsigned int *)&COMM_TX_FLAG);//wait other cpu consume previous value
+    *(unsigned int *)&COMM_TX_DATA_LEN = i;
+    memcpy((unsigned char*)&COMM_TX_DATA,ptr,i);
+    *(unsigned int *)&COMM_TX_FLAG = 1;
+/*
     for (i = 0; i < len; i++)
     {
         myPutChar(*ptr);
         ptr++;
     }
+*/
     return len;
 }
 

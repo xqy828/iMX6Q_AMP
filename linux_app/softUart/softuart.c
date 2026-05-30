@@ -37,12 +37,13 @@
 #include "ampCtrl.h"
 
 #define COMM_TX_FLAG_OFFSET     0x00
-#define COMM_TX_DATA_OFFSET     0x04
+#define COMM_TX_DATA_LEN_OFFSET 0x04
+#define COMM_TX_DATA_OFFSET     0x08
 
 #define PAGE_SIZE ((size_t)getpagesize())
 #define PAGE_MASK ((uint64_t)(long)~(PAGE_SIZE - 1))
 
-#define MAX_STR 256
+#define MAX_STR (256-8u)
 
 UADDR CPU3_SOFT_UART_BASE = 0;
 UADDR VirCpu3SoftUartBase = 0;
@@ -50,6 +51,7 @@ UADDR VirCpu3SoftUartBase = 0;
 void *softuart(void)
 {
     uint32_t value=0;
+    uint32_t len = 1;
     uint32_t flag=0;
     uint8_t str[MAX_STR];
     int rcnt = 0;
@@ -59,17 +61,32 @@ void *softuart(void)
     {//read
         if( (flag = *(volatile uint32_t *)(VirCpu3SoftUartBase + COMM_TX_FLAG_OFFSET)) )
         {
-            value = *(volatile uint32_t *)(VirCpu3SoftUartBase + COMM_TX_DATA_OFFSET);
-
-            //process non-string type data
-            if(flag > 1) 
+            len = *(volatile uint32_t *)(VirCpu3SoftUartBase + COMM_TX_DATA_LEN_OFFSET);
+            if(len > MAX_STR)
             {
+                len = MAX_STR;
+            }
+            if(len  == 0)
+            {
+                len  = 1;
+            }
+            //process non-string type data
+            if(flag > 1)// for debug 
+            {
+                value = *(volatile uint32_t *)(VirCpu3SoftUartBase + COMM_TX_DATA_OFFSET);
                 printf("CPU3: 0x%08x = 0x%08x\n", (uint32_t)(VirCpu3SoftUartBase + COMM_TX_DATA_OFFSET), value);
                 //process string type data
             }
             else 
             {
-                if(rcnt < MAX_STR) 
+                memcpy(str,(unsigned char*)(VirCpu3SoftUartBase + COMM_TX_DATA_OFFSET),len);
+                if(str[len-1] == '\n')
+                {
+                    str[len-1] = '\0';
+                    printf("%s\n", str);
+                }
+/*
+                if(rcnt < MAX_STR)
                 {
                     str[rcnt++] = (uint8_t)value;
                 }
@@ -86,9 +103,11 @@ void *softuart(void)
                     printf("%s\n", str);
                     rcnt = 0;
                 }
+*/
             }
             *(volatile uint32_t *) (VirCpu3SoftUartBase + COMM_TX_FLAG_OFFSET) = 0;
         }
+        usleep(10);
     }
 }
 
