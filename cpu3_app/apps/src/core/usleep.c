@@ -1,6 +1,7 @@
 #include "public.h"
 #include "cortex_a9.h"
 #include "usleep.h"
+#include "generic_timer.h"
 
 /* <<ARM® Cortex®-A9 MPCore Revision: r4p1 Technical Reference Manual>>
  * Global Timer is always clocked at half of the CPU frequency */
@@ -94,3 +95,15 @@ void SysTickElapseConvertToTime(tick_convert_type_t type,unsigned long long int 
 
     *ulTime = tUsed;
 }
+
+int clock_gettime(struct timespec *ts)
+{
+    unsigned long long int cnt = 0;
+    unsigned long long int usec = 0;
+    GetGlobalTime(&cnt);
+    usec = cnt / COUNTS_PER_USECOND;
+    ts->tv_sec  =(unsigned int)(usec / USEC_PER_SEC);
+    ts->tv_nsec =(long)((usec - ts->tv_sec * USEC_PER_SEC) * NSEC_PER_USEC);
+    return 0;
+}
+

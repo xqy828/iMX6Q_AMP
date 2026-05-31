@@ -20,10 +20,12 @@ static inline unsigned int read_cntfrq(void)
     return freq;
 }
 
-unsigned long long int current_usec(void) 
+__attribute__((weak)) unsigned long long int current_usec(void) 
 {
     static unsigned int freq = 0;
     unsigned long long int cnt = 0;
+    disp("freq:%d,cnt:%lld\n",freq,cnt);
+  
     if(freq == 0)
     {
         freq = read_cntfrq();
@@ -32,7 +34,7 @@ unsigned long long int current_usec(void)
     return (cnt * 1000000) / freq;
 }
 
-int clock_gettime(struct timespec *ts)
+__attribute__((weak)) int clock_gettime(struct timespec *ts)
 {
     unsigned long long int usec = 0;
     usec = current_usec(); 
