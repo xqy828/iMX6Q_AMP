@@ -76,10 +76,10 @@
 #define __unused __attribute__((unused))
 #endif
 
-extern char __exidx_start;
-extern char __exidx_end;
-extern char __supervisor_stack_top;
-extern char __supervisor_stack_bottom;
+extern char __exidx_start[];
+extern char __exidx_end[];
+extern char __supervisor_stack_top[];
+extern char __supervisor_stack_bottom[];
 
 /* An item in the exception index table */
 struct unwind_idx {
@@ -135,8 +135,8 @@ static __always_inline __noprof unsigned int read_r7(void)
 ********************************************************************************/
 bool find_exidx(unsigned long int *idx_start, unsigned long int *idx_end)
 {
-	*idx_start = (unsigned long int)__exidx_start;
-	*idx_end = (unsigned long int)__exidx_end;
+	*idx_start = (unsigned long int)&__exidx_start;
+	*idx_end = (unsigned long int)&__exidx_end;
 	return true;
 }
 
@@ -149,8 +149,8 @@ static bool copy_in(void *dst, const void *src, size_t n)
 static inline void __noprof get_stack_hard_limits(unsigned long int *bottom ,unsigned long int *top)
 {	
 	/* The CPU finally runs in Supervisor mode. */
-	unsigned long stack_bottom = (unsigned long)__supervisor_stack_bottom;
-	unsigned long stack_top = (unsigned long)__supervisor_stack_top;
+	unsigned long int stack_bottom = (unsigned long int)&__supervisor_stack_bottom;
+	unsigned long int stack_top = (unsigned long int)&__supervisor_stack_top;
 	size_t stack_sz = stack_bottom - stack_top;
 	*top = stack_top;
 	*bottom = stack_bottom;	
@@ -378,7 +378,7 @@ static bool unwind_tab(struct unwind_state_arm32 *state, unsigned long  stack,
 	state->registers[PC] = 0;
 
 	if (!copy_in(&insn, (void *)state->insn, sizeof(insn))) {
-		disp("Bad insn addr %p", (void *)state->insn);
+		disp("Bad insn addr %p\n", (void *)state->insn);
 		return true;
 	}
 
@@ -392,7 +392,7 @@ static bool unwind_tab(struct unwind_state_arm32 *state, unsigned long  stack,
 		state->byte = 1;
 		state->entries = ((insn >> 16) & 0xFF) + 1;
 	} else {
-		disp("Unknown entry: %x", entry);
+		disp("Unknown entry: %x\n", entry);
 		return true;
 	}
 
@@ -466,18 +466,19 @@ void print_stack_arm32(struct unwind_state_arm32 *state,
 {
 	unsigned long int pc = 0, lr = 0;
 	pc = state->registers[PC] - 4;//dump_stack;
+	lr = state->registers[LR];
 	disp("\n");
 	disp("Call trace:\n");
 	disp("  PC:	[< %08lx >]\n", pc);
 	disp("  LR:	[< %08lx >]\n", lr);
 	disp("\n");
 	disp("Stack:\n");
-/*	
+#if 1
 	do {
 		pc = (unsigned long int)state->registers[PC];
 		disp("	[< %08lx >]\n", pc);
 	} while (unwind_stack_arm32(state, stack, stack_size));
-*/
+#endif
 }
 
 void dump_stack(void)
@@ -511,6 +512,7 @@ void dump_stack(void)
 	 */
 	state.registers[PC] = (unsigned int)dump_stack + 4;
 	get_stack_hard_limits(&stack_bottom, &stack_top);
+	disp("Stack:0x%lx-0x%lx\n",stack_top,stack_bottom);
 	print_stack_arm32(&state, stack_top, stack_bottom - stack_top);
 }
 
