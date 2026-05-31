@@ -7,7 +7,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
-
+#include "debug.h"
+#include "public.h"
 /* The register names */
 #define	FP	11
 #define	SP	13
@@ -356,7 +357,7 @@ static bool unwind_exec_insn(struct unwind_state_arm32 *state, unsigned long  st
 
 	} else {
 		/* We hit a new instruction that needs to be implemented */
-		printf("Unhandled instruction %.2x", insn);
+		disp("Unhandled instruction %.2x", insn);
 		return false;
 	}
 
@@ -377,7 +378,7 @@ static bool unwind_tab(struct unwind_state_arm32 *state, unsigned long  stack,
 	state->registers[PC] = 0;
 
 	if (!copy_in(&insn, (void *)state->insn, sizeof(insn))) {
-		printf("Bad insn addr %p", (void *)state->insn);
+		disp("Bad insn addr %p", (void *)state->insn);
 		return true;
 	}
 
@@ -391,7 +392,7 @@ static bool unwind_tab(struct unwind_state_arm32 *state, unsigned long  stack,
 		state->byte = 1;
 		state->entries = ((insn >> 16) & 0xFF) + 1;
 	} else {
-		printf("Unknown entry: %x", entry);
+		disp("Unknown entry: %x", entry);
 		return true;
 	}
 
@@ -465,14 +466,18 @@ void print_stack_arm32(struct unwind_state_arm32 *state,
 {
 	unsigned long int pc = 0, lr = 0;
 	pc = state->registers[PC] - 4;//dump_stack;
-	printf("\nCall trace:\n");
-	printf("  PC:	[< %08lx >]\n", pc);
-	printf("  LR:	[< %08lx >]\n", lr);
-	printf("\nStack:\n");
+	disp("\n");
+	disp("Call trace:\n");
+	disp("  PC:	[< %08lx >]\n", pc);
+	disp("  LR:	[< %08lx >]\n", lr);
+	disp("\n");
+	disp("Stack:\n");
+/*	
 	do {
 		pc = (unsigned long int)state->registers[PC];
-		printf("	[< %08lx >]\n", pc);
+		disp("	[< %08lx >]\n", pc);
 	} while (unwind_stack_arm32(state, stack, stack_size));
+*/
 }
 
 void dump_stack(void)
@@ -508,5 +513,147 @@ void dump_stack(void)
 	get_stack_hard_limits(&stack_bottom, &stack_top);
 	print_stack_arm32(&state, stack_top, stack_bottom - stack_top);
 }
+
+
+/**************************************************************************//*
+* dummp stack function test  
+**************************************************************************/
+/* ========== 用于增加复杂性的自定义结构体 ========== */
+typedef struct {
+    int id;
+    double value;
+    char name[32];
+} complex_t;
+
+/* ========== 递归函数（深度可控） ========== */
+/**
+ * recursive_func - 递归调用，并记录深度
+ * @depth: 当前剩余递归深度
+ * @max_depth: 初始最大深度（用于局部变量）
+ *
+ * 当 depth == 0 时停止递归，并调用 dump_stack 打印完整调用栈。
+ * 否则继续递归，同时调用其他函数增加栈帧混合。
+ */
+void recursive_func(int depth, int max_depth)
+{
+    /* 大量的局部变量，占用栈空间，测试回溯能否越过这些数据 */
+    volatile int local_arr[64];
+    volatile double pi = 3.14159265358979;
+    volatile char msg[128] = "Inside recursive_func";
+    volatile complex_t st = { .id = depth, .value = depth * 1.5, .name = "recursive" };
+    volatile unsigned long marker = (unsigned long)&marker; // 栈上地址标记
+	UNUSED_PARA(st);
+    UNUSED_PARA(msg);
+	UNUSED_PARA(pi);
+	for (int i = 0; i < 64; ++i) local_arr[i] = depth + i;
+
+    if (depth == 0) {
+        disp("\n");
+		disp(">>> Reached base case of recursion (depth = 0) <<<\n");
+        disp(">>> Current stack should contain main -> func1 -> ... -> func6 -> recursive_func x %d <<<\n", max_depth);
+        dump_stack();
+        return;
+    }
+
+    /* 递归之前混合一次间接调用，增加栈帧多样化 */
+    void (*func_ptr)(int, int) = recursive_func;
+    disp("recursive_func: depth=%d, calling recursively...\n", depth);
+    func_ptr(depth - 1, max_depth);
+}
+
+/* ========== 普通嵌套函数（第6层） ========== */
+void func6(int level, double data, const char *tag)
+{
+    volatile int local = level * 100;
+    volatile double temp = data * 2.0;
+    volatile char buffer[64];
+    snprintf((char*)buffer, sizeof(buffer), "func6 level=%d", level);
+
+    disp("%s called, local=%d, temp=%.2f\n", buffer, local, temp);
+
+    /* 启动递归，深度为 3（可根据需要修改） */
+    recursive_func(3, 3);
+}
+
+/* 第5层 */
+void func5(int level, double data)
+{
+    volatile int arr[32];
+    volatile complex_t st = { level, data, "func5" };
+	UNUSED_PARA(st);
+    for (int i = 0; i < 32; ++i) arr[i] = level + i;
+
+    disp("func5 level=%d, data=%.2f\n", level, data);
+    func6(level + 1, data * 1.5, "from_func5");
+}
+
+/* 第4层 */
+void func4(int level, double data, const char *msg)
+{
+    volatile char local_str[128];
+    volatile int magic = 0xDEADBEEF;
+    snprintf((char*)local_str, sizeof(local_str), "%s at level %d", msg, level);
+    disp("func4: %s, magic=0x%X\n", local_str, magic);
+    func5(level + 1, data * 1.2);
+}
+
+/* 第3层 */
+void func3(int level, double data)
+{
+    volatile double d = data;
+    volatile int counter = 0;
+    disp("func3 level=%d\n", level);
+    /* 简单的循环，增加栈上临时变量 */
+    for (int i = 0; i < 5; ++i) {
+        counter += i;
+        d *= 1.01;
+    }
+    func4(level + 1, d, "Hello from func3");
+}
+
+/* 第2层 */
+void func2(int level, const char *prefix)
+{
+    volatile char combined[256];
+    snprintf((char*)combined, sizeof(combined), "%s[level=%d]", prefix, level);
+    disp("func2: %s\n", combined);
+    func3(level + 1, (double)level * 3.14);
+}
+
+/* 第1层 */
+void func1(int start_level)
+{
+    volatile int my_level = start_level;
+    volatile double pi = 3.1415926;
+	UNUSED_PARA(pi);
+    disp("func1 start_level=%d\n", my_level);
+    func2(my_level + 1, "->func1");
+}
+
+/* ========== 间接调用（函数指针）增加复杂度 ========== */
+void wrapper_func(void (*fn)(int), int arg)
+{
+	disp("\n");
+    disp("--- Enter wrapper_func, about to call function pointer ---\n");
+    fn(arg);
+    disp("--- wrapper_func finished ---\n");
+}
+
+void Test_dump_stack(void)
+{
+    disp("=== Complex Nesting Test for dump_stack ===\n");
+    disp("Call chain: main -> wrapper -> func1 -> func2 -> func3 -> func4 -> func5 -> func6 -> recursive_func x3\n");
+    disp("After reaching base case of recursion, dump_stack() will be called.\n");
+
+    /* 通过函数指针调用 func1，增加一层间接性 */
+    void (*entry)(int) = func1;
+    wrapper_func(entry, 1);
+	disp("\n");
+    disp("=== End of test ===\n");
+}
+
+/**************************************************************************//*
+* end test  
+**************************************************************************/
 
 
