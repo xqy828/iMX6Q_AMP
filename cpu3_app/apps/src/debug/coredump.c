@@ -28,7 +28,7 @@
 #include <elf32.h>
 #include <elf.h>
 #include "board_memory.h"
-#include "tick.h"
+#include "generic_timer.h"
 
 #define ALIGN_UP(x, align_to)	(((x) + ((align_to)-1)) & ~((align_to)-1))
 #define ALIGN_DOWN(x, align_to) ((x) & ~((align_to)-1))

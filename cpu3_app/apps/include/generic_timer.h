@@ -1,5 +1,5 @@
-#ifndef TICK_H_
-#define TICK_H_
+#ifndef GENERIC_TIMER_H_
+#define GENERIC_TIMER_H_
 
 #define NSEC_PER_SEC          1000000000UL /* Seconds */
 #define USEC_PER_SEC             1000000UL
