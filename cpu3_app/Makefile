@@ -29,6 +29,8 @@ ELF_NAME = $(PROG_NAME).elf
 MAP_NAME = $(PROG_NAME).map
 DIS_NAME = $(PROG_NAME).dis
 BIN_NAME = $(PROG_NAME).bin
+SYM_NAME = $(PROG_NAME).sym
+
 THREADX_LIB = $(OUTPUT)/libtx.a
 
 OBJ_DIR = $(OUTPUT)/obj
@@ -111,7 +113,7 @@ THREADX_F :=$(THREADX_OBJS:%.o=%d)
 
 .PHONY: src clean
 
-src: $(THREADX_LIB) $(BIN_NAME) $(DIS_NAME)
+src: $(THREADX_LIB) $(BIN_NAME) $(DIS_NAME) $(SYM_NAME)
 
 $(THREADX_LIB):$(THREADX_OBJS)
 	$(AR) -r $@ $^ 
@@ -133,6 +135,9 @@ $(DIS_NAME):$(ELF_NAME)
 $(BIN_NAME):$(ELF_NAME)
 	@$(OBJCOPY) --gap-fill 0x00 -I elf32-little -O binary $< $@
 	@echo $(BIN_NAME) has been created	
+$(SYM_NAME):$(ELF_NAME)
+	@$(OBJDUMP) -t $< > $@
+	@echo $(SYM_NAME) has been created
 
 -include $(DEP_F)
 -include $(THREADX_F)
