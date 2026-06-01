@@ -149,12 +149,14 @@ SECTIONS
 
     /* Unwind index. This section is related to C++ exceptions, and is required even
        though exceptions are disabled with -fno-exceptions. */
-    PROVIDE_HIDDEN(__exidx_start = .);
+    /*PROVIDE_HIDDEN(__exidx_start = .);*/
     .ARM.exidx :
     {
+        PROVIDE_HIDDEN(__exidx_start = .);
         *(.ARM.exidx* .gnu.linkonce.armexidx.*)
+        PROVIDE_HIDDEN(__exidx_end = .);
     } > DDR
-    PROVIDE_HIDDEN(__exidx_end = .);
+    /*PROVIDE_HIDDEN(__exidx_end = .);*/
 
     /* -- read-write sections -- */
     
