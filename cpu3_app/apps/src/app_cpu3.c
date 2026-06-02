@@ -6,12 +6,15 @@
 #include "arm_cache.h"
 #include "usleep.h"
 #include "interrupt.h"
+#include "debug.h"
+#include "generic_timer.h"
 
 extern unsigned int TestNeon(void);
 extern void TestRoundData(unsigned int Row,unsigned int Line);
 extern void application_main();
-extern unsigned int softuart[2];
+extern unsigned int softuart[256];
 unsigned int process = 0xdeadbeef;
+double gdPi = 3.141592654;
 
 void data_abort_test(void)
 {
@@ -31,17 +34,13 @@ void prefectch_abort_test(void)
                 );
 }
 
-
-double gdPi = 3.141592654;
-__attribute__ ((section (".cpu3main"))) void main(void)
+__attribute__((section(".cpu3main"), used)) void main(void)
 {
     const char Date[12] = __DATE__;
     const char Time[9] = __TIME__;
-    volatile unsigned int cnt = 0;
     unsigned int vbar_reg = 0;
     unsigned int cpsr_reg = 0;
-    
-
+    struct timespec time = {0};
     disp("Build Time:%s-%s.\n",Date,Time);
     disp("float test pi = %lf\n",gdPi);
     disp("process debug addr:0x%x\n",&process);
@@ -85,13 +84,17 @@ __attribute__ ((section (".cpu3main"))) void main(void)
     disp("Normal Distribution Random number Test ...\n");
     TestRoundData(10,5);
     SCU_TimerSetupInterrupt();
-    application_main();
+    //SCU_SendSgi2Cpu0();
+    Test_dump_stack();
+    //application_main();
+
     for(;;)
     {
-        disp("run times:0x%08x.\n",cnt);
+        clock_gettime(&time);
+        disp("tick:%d s:%ld ns\n",time.tv_sec,time.tv_nsec);
         //data_abort_test();
         //prefectch_abort_test();
-        cnt++;
-        usdelay(1000*1000);
+        //SCU_SendSgi2Cpu0();
+        usdelay(1000*5000);
     }
 }
