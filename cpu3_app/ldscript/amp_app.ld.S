@@ -92,6 +92,11 @@ SECTIONS
         *(.ARM.extab* .gnu.linkonce.armextab.*)
         *(.gcc_except_table)
     } > DDR
+    
+    .cpu3main(AX) : ALIGN(8)
+    {
+        *(.cpu3main)
+    } > DDR
 
     .ctors :
     {
