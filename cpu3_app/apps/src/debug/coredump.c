@@ -30,7 +30,7 @@
 #include "board_memory.h"
 #include "generic_timer.h"
 
-#define ALIGN_UP(x, align_to)	(((x) + ((align_to)-1)) & ~((align_to)-1))
+#define ALIGN_UP(x, align_to)    (((x) + ((align_to)-1)) & ~((align_to)-1))
 #define ALIGN_DOWN(x, align_to) ((x) & ~((align_to)-1))
 
 extern char __supervisor_stack_bottom[];// bottom 
