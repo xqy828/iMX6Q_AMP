@@ -18,6 +18,8 @@ ThreadX applications on cpu3**
  iMX6_Platform_SDK     
  https://github.com/antirez/linenoise 
  https://github.com/eclipse-threadx/threadx 
+ https://github.com/OP-TEE/optee_os
+ https://github.com/rockchip-linux/u-boot
 ```
 ### Development board:  
 ![输入图片说明](doc/e9v2.jpg)
@@ -197,4 +199,85 @@ xshell>>
 xshell>>exit
 exit xshell !
 [root@imx6q /mnt/emmc]# 
+```
+## cpu3 dump stack
+
+### Test 
+```c
+[-CPU3-]:Test_dump_stack-(00649)]=== Complex Nesting Test for dump_stack ===
+[-CPU3-]:Test_dump_stack-(00650)]Call chain: main -> wrapper -> func1 -> func2 -> func3 -> func4 -> func5 -> func6 -> recursive_func x3
+[-CPU3-]:Test_dump_stack-(00651)]After reaching base case of recursion, dump_stack() will be called.
+[-CPU3-]:wrapper_func-(00641)]
+[-CPU3-]:wrapper_func-(00642)]--- Enter wrapper_func, about to call function pointer ---
+[-CPU3-]:func1-(00634)]func1 start_level=1
+[-CPU3-]:func2-(00624)]func2: ->func1[level=2]
+[-CPU3-]:func3-(00610)]func3 level=3
+[-CPU3-]:func4-(00601)]func4: Hello from func3 at level 4, magic=0xDEADBEEF
+[-CPU3-]:func5-(00591)]func5 level=5, data=7.92
+[-CPU3-]:func6-(00577)]func6 level=6 called, local=600, temp=23.76
+[-CPU3-]:recursive_func-(00565)]recursive_func: depth=3, calling recursively...
+[-CPU3-]:recursive_func-(00565)]recursive_func: depth=2, calling recursively...
+[-CPU3-]:recursive_func-(00565)]recursive_func: depth=1, calling recursively...
+[-CPU3-]:recursive_func-(00556)]
+[-CPU3-]:recursive_func-(00557)]>>> Reached base case of recursion (depth = 0) <<<
+[-CPU3-]:recursive_func-(00558)]>>> Current stack should contain main -> func1 -> ... -> func6 -> recursive_func x 3 <<<
+[-CPU3-]:dump_stack-(00518)]Stack:0x79a0c5e0-0x7a40c5e0
+[-CPU3-]:print_stack_arm32-(00470)]
+[-CPU3-]:print_stack_arm32-(00471)]Call trace:
+[-CPU3-]:print_stack_arm32-(00472)]  PC:        [< 7800690c >]
+[-CPU3-]:print_stack_arm32-(00473)]  LR:        [< 78006930 >]
+[-CPU3-]:print_stack_arm32-(00474)]
+[-CPU3-]:print_stack_arm32-(00475)]Stack:
+[-CPU3-]:print_stack_arm32-(00479)]     [< 78006910 >]
+[-CPU3-]:print_stack_arm32-(00479)]     [< 78006c44 >]
+[-CPU3-]:print_stack_arm32-(00479)]     [< 78006ca4 >]
+[-CPU3-]:print_stack_arm32-(00479)]     [< 78006ca4 >]
+[-CPU3-]:print_stack_arm32-(00479)]     [< 78006ca4 >]
+[-CPU3-]:print_stack_arm32-(00479)]     [< 78006d4c >]
+[-CPU3-]:print_stack_arm32-(00479)]     [< 78006e8c >]
+[-CPU3-]:print_stack_arm32-(00479)]     [< 78006f3c >]
+[-CPU3-]:print_stack_arm32-(00479)]     [< 7800701c >]
+[-CPU3-]:print_stack_arm32-(00479)]     [< 780070c8 >]
+[-CPU3-]:print_stack_arm32-(00479)]     [< 78007164 >]
+[-CPU3-]:print_stack_arm32-(00479)]     [< 780071f4 >]
+[-CPU3-]:print_stack_arm32-(00479)]     [< 780072e8 >]
+[-CPU3-]:print_stack_arm32-(00479)]     [< 78023e88 >]
+[-CPU3-]:print_stack_arm32-(00479)]     [< 7800058c >]
+[-CPU3-]:print_stack_arm32-(00482)]
+Copy info from "Call trace..." to a file(eg. dump.txt)
+and run command in your project: ./scripts/stacktrace.sh dump.txt
+[-CPU3-]:wrapper_func-(00644)]--- wrapper_func finished ---
+[-CPU3-]:Test_dump_stack-(00656)]
+[-CPU3-]:Test_dump_stack-(00657)]=== End of test ===
+[-CPU3-]:main-(00094)]tick:0 s:387141000 ns
+
+```
+运行解析脚本：    
+```c
+linux@linux-VMware-Virtual-Platform:~/workspace/imx6q_amp/cpu3_app/scripts$ ./stacktrace.sh dump.txt
+
+SYMBOL File: cpu3_app.sym
+
+Call trace:
+ PC:        [< 7800690c >]  dump_stack+0x0/0x16c      imx6q_amp/cpu3_app/apps/src/debug/stacktrace_unwind_arm32.c:488
+ LR:        [< 78006930 >]  dump_stack+0x24/0x16c      imx6q_amp/cpu3_app/apps/src/debug/stacktrace_unwind_arm32.c:490
+
+Stack:
+       [< 78006910 >]  dump_stack+0x4/0x16c
+       [< 78006c44 >]  recursive_func+0x1cc/0x234
+       [< 78006ca4 >]  recursive_func+0x22c/0x234
+       [< 78006ca4 >]  recursive_func+0x22c/0x234
+       [< 78006ca4 >]  recursive_func+0x22c/0x234
+       [< 78006d4c >]  func6+0xa0/0xac
+       [< 78006e8c >]  func5+0x134/0x140
+       [< 78006f3c >]  func4+0xa4/0xb8
+       [< 7800701c >]  func3+0xcc/0xe0
+       [< 780070c8 >]  func2+0x98/0xb0
+       [< 78007164 >]  func1+0x84/0x90
+       [< 780071f4 >]  wrapper_func+0x84/0xc0
+       [< 780072e8 >]  Test_dump_stack+0xb8/0x124
+       [< 78023e88 >]  main+0x2d0/0x338
+       [< 7800058c >]  _boot+0x104/0x0
+
+linux@linux-VMware-Virtual-Platform:~/workspace/imx6q_amp/cpu3_app/scripts$
 ```
