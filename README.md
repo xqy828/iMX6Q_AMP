@@ -14,7 +14,7 @@ ThreadX applications on cpu3**
 ### Reference Documents:  
  <<i.MX 6Dual/6Quad Applications Processor Reference Manual>>   
 ### Reference code:  
-```c
+```css
  iMX6_Platform_SDK     
  https://github.com/antirez/linenoise 
  https://github.com/eclipse-threadx/threadx 
