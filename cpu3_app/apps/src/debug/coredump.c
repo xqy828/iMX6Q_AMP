@@ -35,7 +35,6 @@
 
 extern char __supervisor_stack_bottom[];// bottom 
 extern char __supervisor_stack_top[];// top
-#define SUPERVISOR_STACK_SIZE   ((unsigned long int)(__supervisor_stack_bottom - __supervisor_stack_top))
 #define COREDUMP_INFONAME_SIZE  ALIGN_UP(SUPERVISOR_STACK_SIZE, 8)
 
 #define MIN(a,b)      (((a) < (b)) ? (a) : (b))
