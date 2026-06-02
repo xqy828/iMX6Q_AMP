@@ -479,6 +479,9 @@ void print_stack_arm32(struct unwind_state_arm32 *state,
 		disp("	[< %08lx >]\n", pc);
 	} while (unwind_stack_arm32(state, stack, stack_size));
 #endif
+    disp("\nCopy info from \"Call trace...\" to a file(eg. dump.txt)\n"
+        "and run command in your project: "
+        "./scripts/stacktrace.sh dump.txt \n");
 }
 
 void dump_stack(void)
