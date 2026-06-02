@@ -93,7 +93,7 @@ SECTIONS
         *(.gcc_except_table)
     } > DDR
     
-    .cpu3main(AX) : ALIGN(8)
+    .cpu3main : ALIGN(8)
     {
         *(.cpu3main)
     } > DDR
