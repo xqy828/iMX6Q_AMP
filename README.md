@@ -252,7 +252,7 @@ and run command in your project: ./scripts/stacktrace.sh dump.txt
 [-CPU3-]:main-(00094)]tick:0 s:387141000 ns
 
 ```
-运行解析脚本：    
+Run the parsing script:  
 ```c
 linux@linux-VMware-Virtual-Platform:~/workspace/imx6q_amp/cpu3_app/scripts$ ./stacktrace.sh dump.txt
 
