@@ -9,6 +9,9 @@
 #include <stdbool.h>
 #include "debug.h"
 #include "public.h"
+#pragma GCC push_options
+#pragma GCC optimize("O0")
+
 /* The register names */
 #define    FP    11
 #define    SP    13
@@ -661,4 +664,4 @@ void Test_dump_stack(void)
 * end test  
 **************************************************************************/
 
-
+#pragma GCC pop_options
