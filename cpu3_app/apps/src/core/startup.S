@@ -47,7 +47,7 @@
     .global __abort_stack_bottom
     .global __fiq_stack_bottom
     .global __undef_stack_bottom
-
+    .extern cpu3_main  
     /* Stack Pointer locations for boot code */
     .set Undef_stack,   __undef_stack_bottom
     .set FIQ_stack,     __fiq_stack_bottom
@@ -150,7 +150,7 @@ _boot:
     @ take care of C++ static initialization. this won't cause any harm for plain C apps.
     ldr     r12,=__libc_init_array
     blx     r12
-    
+    ldr     r4,=cpu3_main 
     bx      r4     @ for secondary cpus, jump to argument function pointer passed in by ROM
     @ control should not return from the secondary cpu entry point
     b       startup_exit

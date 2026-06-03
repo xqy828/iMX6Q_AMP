@@ -504,12 +504,13 @@ U32 Cpu3PowerOff(void)
 U32 Cpu3StartRun(void)
 {
     UADDR ullElfEntry = 0;
-    UADDR ullElfMain = 0;
+    //UADDR ullElfMain = 0;
     getElfEntry(&ullElfEntry);
-    getCpu3SectionAddr(".cpu3main",&ullElfMain);
-    printf("cpu3 entry addr:0x%lx,entry arg:0x%lx \r\n",ullElfEntry,ullElfMain);
+    //getCpu3SectionAddr(".cpu3main",&ullElfMain);
+    //printf("cpu3 entry addr:0x%lx,entry arg:0x%lx \r\n",ullElfEntry,ullElfMain);
+    printf("cpu3 entry addr:0x%lx \r\n",ullElfEntry);
     HW_SRC_GPR7_WR((uint32_t)ullElfEntry);//CPU3 _start
-    HW_SRC_GPR8_WR((uint32_t)ullElfMain);//CPU3 app main 
+    //HW_SRC_GPR8_WR((uint32_t)ullElfMain);//CPU3 app main 
     Cpu3PowerOn();
     printf("cpu3 power on \r\n");
     return RET_OK;

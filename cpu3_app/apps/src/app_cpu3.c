@@ -34,7 +34,7 @@ void prefectch_abort_test(void)
                 );
 }
 
-__attribute__((section(".cpu3main"), used)) void main(void)
+void cpu3_main(void)
 {
     const char Date[12] = __DATE__;
     const char Time[9] = __TIME__;

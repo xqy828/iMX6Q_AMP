@@ -92,12 +92,6 @@ SECTIONS
         *(.ARM.extab* .gnu.linkonce.armextab.*)
         *(.gcc_except_table)
     } > DDR
-    
-    .cpu3main : ALIGN(8)
-    {
-        *(.cpu3main)
-    } > DDR
-
     .ctors :
     {
         /* gcc uses crtbegin.o to find the start of
