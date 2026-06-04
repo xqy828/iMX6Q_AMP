@@ -360,7 +360,7 @@ static bool unwind_exec_insn(struct unwind_state_arm32 *state, unsigned long  st
 
     } else {
         /* We hit a new instruction that needs to be implemented */
-        disp("Unhandled instruction %.2x", insn);
+        disp("Unhandled instruction %.8x\n", insn);
         return false;
     }
 
