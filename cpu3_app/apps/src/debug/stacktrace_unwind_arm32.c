@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include "debug.h"
-#define DEBUG
+//#define DEBUG
 #include "public.h"
 #pragma GCC push_options
 #pragma GCC optimize("O0")
