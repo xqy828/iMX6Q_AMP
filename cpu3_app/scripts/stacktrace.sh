@@ -15,7 +15,7 @@ TOOLCHAIN_ADDR2LINE="/opt/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/bin/a
 function resolve_symbol()
 {
 	local pc_str="$1"
-	cat ${SYM_FILE} | sort | awk -v pc="${pc_str}" '/\.(text|cpu3main)/ && $3 != "d" {
+	cat ${SYM_FILE} | sort | awk -v pc="${pc_str}" '/\.(text)/ && $3 != "d" {
 		if (strtonum(pc) < strtonum("0x"$1)) {
 			exit
 		}
@@ -73,6 +73,7 @@ elif [ ! -f ${SYM_FILE} ]; then
 fi
 
 echo "SYMBOL File: ${SYM_FILE}"
+echo "   ELF File: ${ELF_FILE}"
 echo
 echo "Call trace:"
 grep '\[< ' ${INPUT_FILE} | grep '>\]' | grep [PC,LR] | while read line
