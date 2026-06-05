@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include "debug.h"
+#define DEBUG
 #include "public.h"
 #pragma GCC push_options
 #pragma GCC optimize("O0")
@@ -255,7 +256,7 @@ static bool unwind_exec_insn(struct unwind_state_arm32 *state, unsigned long  st
     /* Read the next instruction */
     if (!unwind_exec_read_byte(state, &insn))
         return false;
-
+    debug("insn[0x%08x]\n",insn);
     if ((insn & INSN_VSP_MASK) == INSN_VSP_INC) {
         state->registers[SP] += ((insn & INSN_VSP_SIZE_MASK) << 2) + 4;
 
@@ -384,7 +385,7 @@ static bool unwind_tab(struct unwind_state_arm32 *state, unsigned long  stack,
         disp("Bad insn addr %p\n", (void *)state->insn);
         return true;
     }
-
+    debug("insn[0x%08x]\n",insn);
     /* Read the personality */
     entry = insn & ENTRY_MASK;
 
@@ -441,7 +442,7 @@ bool unwind_stack_arm32(struct unwind_state_arm32 *state,
     index = find_index(state->start_pc - 2);
     if (!index)
         return false;
-
+    debug("ARM.exidx:offset[0x%08x],insn[0x%08x]\n",index->offset,index->insn);
     finished = false;
     if (index->insn != EXIDX_CANTUNWIND) {
         if (index->insn & (1U << 31)) {
@@ -452,7 +453,7 @@ bool unwind_stack_arm32(struct unwind_state_arm32 *state,
             state->insn = (unsigned long )&index->insn +
                       expand_prel31(index->insn);
         }
-
+        debug("Personality routine addr:0x%8x\n",state->insn);
         /* Run the unwind function */
         finished = unwind_tab(state, stack, stack_size);
     }
