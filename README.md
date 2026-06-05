@@ -200,7 +200,7 @@ xshell>>exit
 exit xshell !
 [root@imx6q /mnt/emmc]# 
 ```
-## cpu3 dump stack
+## cpu3 dump stack(NO RTOS)
 
 ### Test 
 ```c
