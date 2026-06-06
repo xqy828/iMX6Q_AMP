@@ -243,5 +243,13 @@ SECTIONS
         __undef_stack_bottom = .;
     } > DDR
     
+    .cpu3coredump (NOLOAD): ALIGN(4096)
+    {
+        . = ALIGN(4096);
+        __coredump_start = .;
+        *(.cpu3coredump);
+        __coredump_end = .;
+    } > DDR
+    
     _end = .;
 }
