@@ -155,7 +155,6 @@ static inline void __noprof get_stack_hard_limits(unsigned long int *bottom ,uns
     /* The CPU finally runs in Supervisor mode. */
     unsigned long int stack_bottom = (unsigned long int)&__supervisor_stack_bottom;
     unsigned long int stack_top = (unsigned long int)&__supervisor_stack_top;
-    size_t stack_sz = stack_bottom - stack_top;
     *top = stack_top;
     *bottom = stack_bottom;    
 }
