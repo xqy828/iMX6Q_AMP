@@ -1,13 +1,15 @@
 # imx6q amp
 
 ### Project Title
-imx6q amp simplified version    
-
- **Linux on cpu0-cpu2  
-ThreadX applications on cpu3**    
+imx6q amp,just for fun   
+### core function:
+- 1 Linux runs on CPU0~CPU2, ThreadX applications or  bare-metal applications on CPU3.   
+- 2 Linux loads ELF firmware to boot CPU3. Virtual UART based on shared memory forwards CPU3 logs to Linux console.   
+- 3 Linux xshell debugging tool. interactive command-line interface supporting remote function calls for target processes during runtime.   
+- 4 Bare-metal on CPU3 performs stack backtrace, and Linux script parses symbol addresses to resolve function names.  
 
 ### Development platform:  
- Raspberry Pi 4B   
+ Raspberry Pi 4B / Ubuntu 24.04 VM    
 ### Software development tools:  
  arm-none-eabi-gcc gcc version 12.3.1 20230626 (Arm GNU Toolchain 12.3.Rel1 (Build arm-12.35))    
  arm-none-linux-gnueabihf-gcc gcc version 12.3.1 20230626 (Arm GNU Toolchain 12.3.Rel1 (Build arm-12.35))   
