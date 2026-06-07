@@ -27,6 +27,7 @@
 #include <stdbool.h>
 #include <elf32.h>
 #include <elf.h>
+#include "debug.h"
 #include "board_memory.h"
 #include "generic_timer.h"
 
@@ -60,6 +61,7 @@ extern char __supervisor_stack_top[];// top
 #define EF_FLAG                  (EF_ARM_EABI_VER5 | EF_ARM_ABI_FLOAT)
 
 typedef unsigned long elf_gregset_t[18];
+unsigned char g_running_regs[18*4];
 
 typedef struct elf_prpsinfo_s
 {
@@ -127,7 +129,7 @@ struct dump_save_region
 struct elf_dumpinfo_s
 {
   const struct memory_region_s *regions;
-  struct dump_save_region *dump_regions;
+  struct dump_save_region dump_regions;
 };
  
 struct coredump_info_s
@@ -136,19 +138,47 @@ struct coredump_info_s
   size_t          size;
 };
 
+typedef struct elf_coredump_head
+{
+  unsigned int magic;
+  unsigned int f_size;
+} coredump_head_t;
+
 static struct memory_region_s g_memory_region[] =
 {
   {DDR_ORG,DDR_LEN,PF_R|PF_W|PF_X},
 };
 
-static const struct memory_region_s *g_regions;
+static const struct memory_region_s *g_regions = NULL;
+__attribute__ ((section (".cpu3coredump")))  __attribute__ ((aligned (4096))) unsigned char coredump_file[SUPERVISOR_STACK_SIZE * 2] = {[0 ... SUPERVISOR_STACK_SIZE * 2 - 1] = 0x0};
+
+coredump_head_t g_coredump_head;
+
+unsigned int get_save_sp(void)
+{
+  return  0;
+}
+
+unsigned int get_save_regs(unsigned char *regs)
+{
+  return 0;
+}
+
+static int elf_flush_dcache(struct elf_dumpinfo_s *cinfo)
+{
+  g_coredump_head.magic = COREDUMP_MAGIC;
+  g_coredump_head.f_size = cinfo->dump_regions.offset;
+  memcpy(&coredump_file[0],&g_coredump_head,sizeof(coredump_head_t));
+  //flush d-cache
+  return  0;
+}
 
 static int elf_emit(struct elf_dumpinfo_s *cinfo,const void *buf, size_t len)
 {
   const uint8_t *ptr = buf;
   size_t total = len;
-  memcpy((void*)cinfo->dump_regions->start + cinfo->dump_regions->offset,ptr,total);
-  cinfo->dump_regions->offset = total;
+  memcpy((void*)cinfo->dump_regions.start + cinfo->dump_regions.offset,ptr,total);
+  cinfo->dump_regions.offset = total;
   return 0;
 }
 
@@ -170,7 +200,7 @@ static void elf_emit_tcb_phdr(struct elf_dumpinfo_s *cinfo,Elf_Phdr *phdr, off_t
   unsigned long int sp = 0;
   phdr->p_vaddr = 0;
 
-  //sp = up_getusrsp(tcb->xcp.regs);  // to do  
+  sp = get_save_sp();// to do  
   if (sp > (unsigned long int)__supervisor_stack_top &&
       sp < (unsigned long int)__supervisor_stack_bottom)
   {
@@ -200,7 +230,7 @@ static void elf_emit_tcb_phdr(struct elf_dumpinfo_s *cinfo,Elf_Phdr *phdr, off_t
 
 static int elf_emit_align(struct elf_dumpinfo_s *cinfo)
 {
-  off_t align = ALIGN_UP(cinfo->dump_regions->offset,ELF_PAGESIZE) - cinfo->dump_regions->offset;
+  off_t align = ALIGN_UP(cinfo->dump_regions.offset,ELF_PAGESIZE) - cinfo->dump_regions.offset;
   unsigned char null[256];
   off_t total = align;
   off_t ret = 0;
@@ -247,7 +277,7 @@ static int elf_emit_hdr(struct elf_dumpinfo_s *cinfo,int segs)
 
 static void elf_emit_phdr(struct elf_dumpinfo_s *cinfo,int stksegs, int memsegs)
 {
-  off_t offset = cinfo->dump_regions->offset + (stksegs + memsegs + 1 + 1) * sizeof(Elf_Phdr);
+  off_t offset = cinfo->dump_regions.offset + (stksegs + memsegs + 1 + 1) * sizeof(Elf_Phdr);
   Elf_Phdr phdr;
   int i;
 
@@ -328,17 +358,16 @@ static void elf_emit_tcb_note(struct elf_dumpinfo_s *cinfo)
   elf_emit(cinfo, &nhdr, sizeof(nhdr));
   elf_emit(cinfo, name, sizeof(name));
   status.pr_pid = 0;
-/*
-  up_saveusercontext(g_running_regs);
+
+  get_save_regs(g_running_regs);
   regs = (unsigned long int *)g_running_regs;
   if (regs != NULL)
   {
     for (i = 0; i < MIN(nitems(status.pr_regs), 17); i++)// R0 - R15,CPSR
     {
-      status.pr_regs[i] = *(unsigned long int *)((unsigned char *)regs + g_tcbinfo.reg_off.p[i]);
+      status.pr_regs[i] = *(unsigned long int *)(regs + i);
     }
   }
-*/
   elf_emit(cinfo, &status, sizeof(status));
 }
 
@@ -348,7 +377,7 @@ static void elf_emit_tcb_stack(struct elf_dumpinfo_s *cinfo)
   unsigned long int sp;
   size_t len;
 
-  //sp = up_getusrsp(tcb->xcp.regs);  // to do  
+  sp = get_save_sp();  // to do  
   if (sp > (unsigned long int)__supervisor_stack_top &&
       sp < (unsigned long int)__supervisor_stack_bottom)
   {
@@ -440,7 +469,7 @@ static void elf_emit_info_note( struct elf_dumpinfo_s *cinfo)
     elf_emit(cinfo, zero, pad);
   }
 
-  info.size = cinfo->dump_regions->offset + sizeof(info);
+  info.size = cinfo->dump_regions.offset + sizeof(info);
   clock_gettime(&info.time);
   elf_emit(cinfo, &info, sizeof(info));
 }
@@ -451,6 +480,7 @@ int coredump(const struct memory_region_s *regions)
     int memsegs = 0;
     int stksegs = 1; // NO RTOS now 
     cinfo.regions = regions;
+    cinfo.dump_regions.start =(unsigned int)&coredump_file[sizeof(coredump_head_t)];
     if (cinfo.regions != NULL)
     {
       for (; cinfo.regions[memsegs].start <
@@ -490,9 +520,22 @@ int coredump(const struct memory_region_s *regions)
 
     elf_emit_info_note(&cinfo);
 
-    /* Flush the dump */
+    /* write the dump */
 
-    //elf_flush(&cinfo);
+    elf_flush_dcache(&cinfo);
 
     return 0;
+}
+
+int coredump_initialize(void)
+{
+  g_regions = g_memory_region;
+  memset(&coredump_file[0],0x00,sizeof(coredump_file));
+  return 0;
+}
+
+int do_coredump(void)
+{
+  coredump(g_regions);
+  return  0;
 }

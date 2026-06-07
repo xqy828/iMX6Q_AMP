@@ -12,7 +12,7 @@
 extern unsigned int TestNeon(void);
 extern void TestRoundData(unsigned int Row,unsigned int Line);
 extern void application_main();
-extern unsigned int softuart[256];
+extern int virt_uart_memory_init(void);
 unsigned int process = 0xdeadbeef;
 double gdPi = 3.141592654;
 
@@ -74,7 +74,7 @@ void cpu3_main(void)
 
     mmu_init();
     disp("Enable MMU \n");
-    SetTlbAttributes((unsigned int)&softuart[0],0x1,0x32);
+    virt_uart_memory_init();
     mmu_enable();
     disp("Enable SIMD VFP \n");
     Enable_SIMD_VFP();
@@ -84,17 +84,15 @@ void cpu3_main(void)
     disp("Normal Distribution Random number Test ...\n");
     TestRoundData(10,5);
     SCU_TimerSetupInterrupt();
-    //SCU_SendSgi2Cpu0();
     Test_dump_stack();
+    coredump_initialize();
+    SCU_SendSgi2Cpu0();
     //application_main();
 
     for(;;)
     {
         clock_gettime(&time);
         disp("tick:%d s:%ld ns\n",time.tv_sec,time.tv_nsec);
-        //data_abort_test();
-        //prefectch_abort_test();
-        //SCU_SendSgi2Cpu0();
         usdelay(1000*5000);
     }
 }

@@ -3,5 +3,7 @@
 
 void dump_stack(void);
 void Test_dump_stack(void);
+int do_coredump(void);
+int coredump_initialize(void);
 #endif
 
