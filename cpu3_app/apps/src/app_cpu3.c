@@ -53,10 +53,9 @@ void cpu3_main(void)
     scu_enable();
     scu_join_smp();
     scu_enable_maintenance_broadcast(); 
-
     mmu_init();
-    disp("Enable MMU \n");
     virt_uart_memory_init();
+    disp("Enable MMU \n");
     mmu_enable();
     disp("Enable SIMD VFP \n");
     Enable_SIMD_VFP();
@@ -68,7 +67,6 @@ void cpu3_main(void)
     SCU_TimerSetupInterrupt();
     Test_dump_stack();
     coredump_initialize();
-    //SCU_SendSgi2Cpu0();
     //application_main();
     Test_coredump();
     for(;;)

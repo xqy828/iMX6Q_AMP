@@ -40,9 +40,9 @@ typedef struct elf_coredump_head
 U32 getCpu3CoreDumpData(void)
 {
     UADDR Cpu3DumpDataAddr = 0;
-    volatile uint8_t *mm;
-    FILE *fp;
-    int fd;
+    volatile uint8_t *mm = NULL;
+    FILE *fp = NULL;
+    int fd = 0;
     char filename[256];
     time_t now;
     struct tm *tm_info;
@@ -54,12 +54,7 @@ U32 getCpu3CoreDumpData(void)
     VU32 VirtAddr = 0;
     unsigned int bytes_written;
     coredump_head_t head;
-    S32 mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
-    if(mem_fd < 0)
-    {
-        fprintf(stderr, "open(/dev/mem) failed (%d)\n", errno);
-        return RET_NOK;
-    }
+    S32 mem_fd = 0;
     rc = getCpu3SectionAddr(".cpu3coredump",&Cpu3DumpDataAddr);
     if(rc != RET_OK)
     {
@@ -67,7 +62,14 @@ U32 getCpu3CoreDumpData(void)
         return RET_NOK;
     }
     printf("cpu3 core dump addr:0x%lx\r\n",Cpu3DumpDataAddr);
-    
+
+    mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
+    if(mem_fd < 0)
+    {
+        fprintf(stderr, "open(/dev/mem) failed (%d)\n", errno);
+        return RET_NOK;
+    }
+
     uloffset = Cpu3DumpDataAddr % PAGE_SIZE;
     ulPhyBase  = Cpu3DumpDataAddr - uloffset;
 
@@ -80,9 +82,29 @@ U32 getCpu3CoreDumpData(void)
         return RET_NOK;
     }
     VirtAddr = (UADDR)mm + uloffset;
-    printf("CPU3 Core Dump VirtAddr:0x%x \n", VirtAddr);
+    printf("CPU3 Core Dump VirtAddr:0x%x ,uloffset:0x%x,ulPhyBase:0x%x,PAGE_CNT:%d\n", VirtAddr,
+            uloffset,ulPhyBase,PAGE_CNT);
+    close(mem_fd);
+    memcpy(&head,(unsigned char*)VirtAddr,sizeof(coredump_head_t));
+    printf("*(volatile unsigned int*)VirtAddr:0x%08x,head.magic:0x%08x,head.f_size:0x%08x,*(volatile unsigned int*)VirtAddr:0x%08x\n",
+        *(volatile unsigned int*)VirtAddr,head.magic,head.f_size,*(volatile unsigned int*)VirtAddr);
+    if(head.magic != COREDUMP_MAGIC)
+    {
+        printf("magic is incorrect 0x%08x \n",head.magic);
+        munmap((void *)mm, PAGE_SIZE * PAGE_CNT);
+        return -1;
+    }
+    if((head.f_size == 0) || (head.f_size >  MAX_CPU3_COREDUMP_SIZE))
+    {
+        printf("file size is invalid %d bytes\n",head.f_size);
+        munmap((void *)mm, PAGE_SIZE * PAGE_CNT);
+        return -1;
+    }
+    printf("Starting memory dump to %s (size: %d bytes)\n", filename, head.f_size);
 
-    // Get current time for timestamp
+    memcpy(&Cpu3CoredumpData[0],(unsigned char*)VirtAddr+sizeof(coredump_head_t),head.f_size);
+    msleep(1);
+        // Get current time for timestamp
     now = time(NULL);
     tm_info = localtime(&now);
     strftime(time_str, sizeof(time_str), "%Y%m%d_%H%M%S", tm_info);
@@ -94,36 +116,13 @@ U32 getCpu3CoreDumpData(void)
         fprintf(stderr, "Failed to open coredump file %s: %s\n", 
                 filename, strerror(errno));
         munmap((void *)mm, PAGE_SIZE * PAGE_CNT);
-        close(mem_fd);
         return -1;
     }
-    memcpy(&head,(unsigned char*)VirtAddr,sizeof(coredump_head_t));
-    if(head.magic != COREDUMP_MAGIC)
-    {
-        printf("magic is incorrect 0x%08x \n",head.magic);
-        munmap((void *)mm, PAGE_SIZE * PAGE_CNT);
-        close(mem_fd);
-        fclose(fp);
-        return -1;
-    }
-    if((head.f_size == 0) || (head.f_size >  MAX_CPU3_COREDUMP_SIZE))
-    {
-        printf("file size is invalid %d bytes\n",head.f_size);
-        munmap((void *)mm, PAGE_SIZE * PAGE_CNT);
-        close(mem_fd);
-        fclose(fp);
-        return -1;
-    }
-    printf("Starting memory dump to %s (size: %d bytes)\n", filename, head.f_size);
-
-    memcpy(&Cpu3CoredumpData[0],(unsigned char*)VirtAddr+sizeof(coredump_head_t),head.f_size);
-    msleep(1);
     bytes_written = fwrite((void *)Cpu3CoredumpData,1,head.f_size,fp);
     if (bytes_written != head.f_size) {
         fprintf(stderr, "Failed to write complete memory dump: wrote %zd of %d bytes\n",
                 bytes_written, head.f_size);
-        munmap((void *)mm, PAGE_SIZE * PAGE_CNT);
-        close(mem_fd);
+        munmap((void *)mm, PAGE_SIZE * PAGE_CNT);;
         fclose(fp);
         return -1;
     }
@@ -140,7 +139,6 @@ U32 getCpu3CoreDumpData(void)
         printf("Memory dump completed successfully: %s\n", filename);
     }
     munmap((void *)mm, PAGE_SIZE * PAGE_CNT);
-    close(mem_fd);
     fclose(fp);
     return 0;
 }

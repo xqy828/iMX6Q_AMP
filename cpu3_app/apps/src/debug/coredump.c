@@ -478,7 +478,6 @@ int coredump(const struct memory_region_s *regions)
     cinfo.regions = regions;
     cinfo.dump_regions.offset = 0;
     cinfo.dump_regions.start =(unsigned int)&coredump_file[sizeof(coredump_head_t)];
-    disp("cinfo.dump_regions.start=0x%X\n",cinfo.dump_regions.start);
     if (cinfo.regions != NULL)
     {
       for (; cinfo.regions[memsegs].start <
