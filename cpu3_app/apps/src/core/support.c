@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include "asm_defines.h"
 #include "public.h"
-
+#include "mmu.h"
 extern int free_memory_start;
 extern int free_memory_end;
 
@@ -13,11 +13,18 @@ extern int free_memory_end;
 #define MAX_STR     (256-8u)
 char * __env[1] = { 0 };
 __attribute__ ((unused)) static char ** environ = __env;
-__attribute__ ((section (".cpu3softuart")))  __attribute__ ((aligned (4096))) unsigned char softuart[MAX_SIZE] = {[0 ... MAX_SIZE-1] = 0x0};
+__attribute__ ((section (".cpu3softuart")))  __attribute__ ((aligned (4096))) unsigned char softuart[MAX_SIZE];
 
 #define COMM_TX_FLAG (softuart[0])
 #define COMM_TX_DATA (softuart[8])
 #define COMM_TX_DATA_LEN (softuart[4])
+
+int virt_uart_memory_init(void)
+{
+    SetTlbAttributes((unsigned int)&softuart[0],0x1,0x32);
+    memset(softuart,0x00,sizeof(softuart));
+    return 0;
+}
 
  __attribute__ ((used)) static void myPutChar(char c)
 {
