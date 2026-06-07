@@ -21,6 +21,7 @@
 #include <linux/interrupt.h>
 #include <linux/irqdomain.h>
 #include <linux/workqueue.h>
+#include <linux/eventfd.h>
 
 #define DEVICE_NAME "imx6q_amp"
 #define DEVICE_NUM 1
@@ -28,6 +29,7 @@
 #define CPU3_IPI_ID (15)
 #define IRQ_CPU_CORE (0)
 #define MAX_SGI 16
+#define AMP_SGI_SET_COREDUMP_EFD _IOW(SGI_MAGIC, 0x01, int)
 
 struct Sgi_IrqWork
 {
@@ -41,7 +43,7 @@ struct imx6q_amp_cdev
     struct cdev cdev;
     struct device *amp_dev;
     struct class *amp_class;
-    struct fasync_struct *async_queue;
+    struct eventfd_ctx *coredump_efd;
 };
 
 struct imx6q_amp_pdata 
@@ -67,26 +69,55 @@ static int amp_open(struct inode *inode, struct file *filp)
 
 static long amp_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
+    struct imx6q_amp_pdata *pdata = filp->private_data;
+    struct imx6q_amp_cdev *cdev = &pdata->amp_cdev;
     int rc = 0;
-    unsigned int this_cpu = 0;
-    this_cpu =raw_smp_processor_id();
-    printk(KERN_DEBUG "AMP SGI:cpu[%d],cmd:0x%x,Task id:%d,Parent:%s\n",this_cpu,cmd,current->pid,current->comm);
+
+    switch (cmd) {
+    case AMP_SGI_SET_COREDUMP_EFD: {
+        int efd;
+        struct eventfd_ctx *ctx;
+
+        if (copy_from_user(&efd, (int __user *)arg, sizeof(efd)))
+            return -EFAULT;
+
+        if (efd == -1) {
+            if (cdev->coredump_efd) {
+                eventfd_ctx_put(cdev->coredump_efd);
+                cdev->coredump_efd = NULL;
+            }
+            dev_info(pdata->dev, "coredump eventfd cleared\n");
+        } else {
+            ctx = eventfd_ctx_fdget(efd);
+            if (IS_ERR(ctx)) {
+                dev_err(pdata->dev, "invalid eventfd fd %d (err %ld)\n",
+                        efd, PTR_ERR(ctx));
+                return PTR_ERR(ctx);
+            }
+            if (cdev->coredump_efd)
+                eventfd_ctx_put(cdev->coredump_efd);
+            cdev->coredump_efd = ctx;
+            dev_info(pdata->dev, "coredump eventfd registered (fd %d)\n", efd);
+        }
+        break;
+    }
+    default:
+        dev_dbg(pdata->dev, "unknown ioctl cmd 0x%x\n", cmd);
+        rc = -ENOTTY;
+        break;
+    }
     return rc;
 }
 
-static int amp_fasync(int fd, struct file *filp,int mode)
-{
-    struct imx6q_amp_pdata *pdata;
-    pdata = (struct imx6q_amp_pdata*)filp->private_data;
-
-    return fasync_helper(fd,filp,mode,&pdata->amp_cdev.async_queue);    
-}
 
 static int amp_release(struct inode *inode, struct file *filp)
 {
     struct imx6q_amp_pdata *pdata;
     pdata = (struct imx6q_amp_pdata*)filp->private_data;
-    amp_fasync(-1,filp,0);
+    if (pdata->amp_cdev.coredump_efd) {
+        eventfd_ctx_put(pdata->amp_cdev.coredump_efd);
+        pdata->amp_cdev.coredump_efd = NULL;
+    }
     printk(KERN_DEBUG "close amp device success !\n");
     return 0;
 }
@@ -111,10 +142,9 @@ static void cpu3_sgi_kick_work_fn(struct work_struct *work)
     struct Sgi_IrqWork *irq_work = container_of(work, struct Sgi_IrqWork, amp_sgi_work);
     struct imx6q_amp_pdata *pdata = container_of(irq_work, struct imx6q_amp_pdata, irq_work);
     dev_info(pdata->dev, "work executed on CPU %d\n", smp_processor_id());
-    if (pdata->amp_cdev.async_queue) 
-    {
-        kill_fasync(&pdata->amp_cdev.async_queue, SIGIO, POLL_IN);
-        dev_info(pdata->dev, "sent SIGIO\n");
+    if (pdata->amp_cdev.coredump_efd) {
+        eventfd_signal(pdata->amp_cdev.coredump_efd, 1);
+        dev_info(pdata->dev, "signalled eventfd\n");
     }
 }
 
@@ -123,7 +153,6 @@ static const struct file_operations amp_fops=
     .owner = THIS_MODULE,
     .open = amp_open,
     .release = amp_release,
-    .fasync = amp_fasync,
     .unlocked_ioctl = amp_ioctl,
 };
 
