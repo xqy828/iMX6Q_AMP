@@ -516,7 +516,6 @@ U32 Cpu3StartRun(void)
     return RET_OK;
 }
 
-
 U32 InitCpu3(void)
 {
     int rc = RET_NOK;
@@ -526,9 +525,14 @@ U32 InitCpu3(void)
         printf("CPU3 load failed \n");
         return RET_NOK;
     }
+    return RET_OK;
+}
+
+U32 StartCpu3(void)
+{
     usleep(200);
     Cpu3PowerOff();
     usleep(200);
     Cpu3StartRun();
-    return RET_OK;
+    return 0;
 }

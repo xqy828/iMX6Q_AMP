@@ -30,6 +30,7 @@ S32 main (void)
     InitCpu3();
     SoftUartInit();
     XshellInit();
+    StartCpu3();
     for(;;)
     {
         msleep(30);
