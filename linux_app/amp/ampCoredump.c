@@ -63,10 +63,10 @@ U32 getCpu3CoreDumpData(void)
     rc = getCpu3SectionAddr(".cpu3coredump",&Cpu3DumpDataAddr);
     if(rc != RET_OK)
     {
-        printf("get cpu3 Dump Addr failed \r\n");
+        printf("get cpu3 core dump Addr failed \r\n");
         return RET_NOK;
     }
-    printf("cpu3 data dump addr:0x%lx\r\n",Cpu3DumpDataAddr);
+    printf("cpu3 core dump addr:0x%lx\r\n",Cpu3DumpDataAddr);
     
     uloffset = Cpu3DumpDataAddr % PAGE_SIZE;
     ulPhyBase  = Cpu3DumpDataAddr - uloffset;
@@ -79,7 +79,7 @@ U32 getCpu3CoreDumpData(void)
                 PAGE_SIZE*PAGE_CNT, (uint32_t)(Cpu3DumpDataAddr), errno,strerror(errno));
         return RET_NOK;
     }
-    VirtAddr = (U32)mm + uloffset;
+    VirtAddr = (UADDR)mm + uloffset;
     printf("CPU3 Core Dump VirtAddr:0x%x \n", VirtAddr);
 
     // Get current time for timestamp
@@ -118,7 +118,7 @@ U32 getCpu3CoreDumpData(void)
 
     memcpy(&Cpu3CoredumpData[0],(unsigned char*)VirtAddr+sizeof(coredump_head_t),head.f_size);
     msleep(1);
-    bytes_written = fwrite((void *)Cpu3CoredumpData,head.f_size,1,fp);
+    bytes_written = fwrite((void *)Cpu3CoredumpData,1,head.f_size,fp);
     if (bytes_written != head.f_size) {
         fprintf(stderr, "Failed to write complete memory dump: wrote %zd of %d bytes\n",
                 bytes_written, head.f_size);

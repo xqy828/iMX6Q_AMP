@@ -174,7 +174,7 @@ static int elf_emit(struct elf_dumpinfo_s *cinfo,const void *buf, size_t len)
   const uint8_t *ptr = buf;
   size_t total = len;
   memcpy((void*)cinfo->dump_regions.start + cinfo->dump_regions.offset,ptr,total);
-  cinfo->dump_regions.offset = total;
+  cinfo->dump_regions.offset += total;
   return 0;
 }
 
