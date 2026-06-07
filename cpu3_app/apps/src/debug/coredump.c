@@ -28,8 +28,11 @@
 #include <elf32.h>
 #include <elf.h>
 #include "debug.h"
+#include "arm_cache.h"
 #include "board_memory.h"
 #include "generic_timer.h"
+#include "interrupt.h"
+#include "public.h"
 
 #define ALIGN_UP(x, align_to)    (((x) + ((align_to)-1)) & ~((align_to)-1))
 #define ALIGN_DOWN(x, align_to) ((x) & ~((align_to)-1))
@@ -153,16 +156,8 @@ static const struct memory_region_s *g_regions = NULL;
 __attribute__ ((section (".cpu3coredump")))  __attribute__ ((aligned (4096))) unsigned char coredump_file[SUPERVISOR_STACK_SIZE * 2] = {[0 ... SUPERVISOR_STACK_SIZE * 2 - 1] = 0x0};
 
 coredump_head_t g_coredump_head;
-
-unsigned int get_save_sp(void)
-{
-  return  0;
-}
-
-unsigned int get_save_regs(unsigned char *regs)
-{
-  return 0;
-}
+extern unsigned int get_save_sp(void);
+unsigned int get_save_regs(unsigned char **regs);
 
 static int elf_flush_dcache(struct elf_dumpinfo_s *cinfo)
 {
@@ -170,6 +165,7 @@ static int elf_flush_dcache(struct elf_dumpinfo_s *cinfo)
   g_coredump_head.f_size = cinfo->dump_regions.offset;
   memcpy(&coredump_file[0],&g_coredump_head,sizeof(coredump_head_t));
   //flush d-cache
+  arm_dcache_flush_mlines(&coredump_file[0],sizeof(coredump_file));
   return  0;
 }
 
@@ -326,7 +322,7 @@ static void elf_emit_tcb_note(struct elf_dumpinfo_s *cinfo)
   Elf_Nhdr nhdr;
   int i;
   size_t pad;
-
+  unsigned char *p = NULL;
   memset(name,   0x0, sizeof(name));
   memset(&info,   0x0, sizeof(info));
   memset(&status, 0x0, sizeof(status));
@@ -358,8 +354,8 @@ static void elf_emit_tcb_note(struct elf_dumpinfo_s *cinfo)
   elf_emit(cinfo, &nhdr, sizeof(nhdr));
   elf_emit(cinfo, name, sizeof(name));
   status.pr_pid = 0;
-
-  get_save_regs(g_running_regs);
+  p = g_running_regs;
+  get_save_regs(&p);
   regs = (unsigned long int *)g_running_regs;
   if (regs != NULL)
   {
@@ -480,7 +476,9 @@ int coredump(const struct memory_region_s *regions)
     int memsegs = 0;
     int stksegs = 1; // NO RTOS now 
     cinfo.regions = regions;
+    cinfo.dump_regions.offset = 0;
     cinfo.dump_regions.start =(unsigned int)&coredump_file[sizeof(coredump_head_t)];
+    disp("cinfo.dump_regions.start=0x%X\n",cinfo.dump_regions.start);
     if (cinfo.regions != NULL)
     {
       for (; cinfo.regions[memsegs].start <
@@ -523,7 +521,6 @@ int coredump(const struct memory_region_s *regions)
     /* write the dump */
 
     elf_flush_dcache(&cinfo);
-
     return 0;
 }
 
@@ -531,11 +528,175 @@ int coredump_initialize(void)
 {
   g_regions = g_memory_region;
   memset(&coredump_file[0],0x00,sizeof(coredump_file));
+  arm_dcache_flush_mlines(&coredump_file[0],sizeof(coredump_file));
   return 0;
 }
 
 int do_coredump(void)
 {
   coredump(g_regions);
+  SCU_SendSgi2Cpu0();
   return  0;
 }
+
+void data_abort_test(void)
+{
+  *(volatile unsigned int *)0x00000000 = 0x12345678;
+}
+
+void prefectch_abort_test(void)
+{
+    void (*invalid_func)(void) = (void (*)(void))0x20000000;
+    invalid_func();
+}
+
+void trigger_undef_instruction(void)
+{
+    asm volatile (
+        ".word 0xE7F000F0\n"
+    );
+}
+
+/**************************************************************************//*
+* dummp stack function test  
+**************************************************************************/
+/* ========== 用于增加复杂性的自定义结构体 ========== */
+typedef struct {
+    int id;
+    double value;
+    char name[32];
+} complex_t;
+
+/* ========== 递归函数（深度可控） ========== */
+/**
+ * recursive_func - 递归调用，并记录深度
+ * @depth: 当前剩余递归深度
+ * @max_depth: 初始最大深度（用于局部变量）
+ *
+ * 当 depth == 0 时停止递归，并调用 dump_stack 打印完整调用栈。
+ * 否则继续递归，同时调用其他函数增加栈帧混合。
+ */
+static void recursive_func(int depth, int max_depth)
+{
+    /* 大量的局部变量，占用栈空间，测试回溯能否越过这些数据 */
+    volatile int local_arr[64];
+    volatile double pi = 3.14159265358979;
+    volatile char msg[128] = "Inside recursive_func";
+    volatile complex_t st = { .id = depth, .value = depth * 1.5, .name = "recursive" };
+    volatile unsigned long marker = (unsigned long)&marker; // 栈上地址标记
+    UNUSED_PARA(st);
+    UNUSED_PARA(msg);
+    UNUSED_PARA(pi);
+    for (int i = 0; i < 64; ++i) local_arr[i] = depth + i;
+
+    if (depth == 0) {
+        disp("\n");
+        disp(">>> Reached base case of recursion (depth = 0) <<<\n");
+        disp(">>> Current stack should contain main -> func1 -> ... -> func6 -> recursive_func x %d <<<\n", max_depth);
+        //trigger_undef_instruction();
+        data_abort_test();
+        prefectch_abort_test();
+        return;
+    }
+
+    /* 递归之前混合一次间接调用，增加栈帧多样化 */
+    void (*func_ptr)(int, int) = recursive_func;
+    disp("recursive_func: depth=%d, calling recursively...\n", depth);
+    func_ptr(depth - 1, max_depth);
+}
+
+/* ========== 普通嵌套函数（第6层） ========== */
+static void func6(int level, double data, const char *tag)
+{
+    volatile int local = level * 100;
+    volatile double temp = data * 2.0;
+    volatile char buffer[64];
+    snprintf((char*)buffer, sizeof(buffer), "func6 level=%d", level);
+
+    disp("%s called, local=%d, temp=%.2f\n", buffer, local, temp);
+
+    /* 启动递归，深度为 3（可根据需要修改） */
+    recursive_func(3, 3);
+}
+
+/* 第5层 */
+static void func5(int level, double data)
+{
+    volatile int arr[32];
+    volatile complex_t st = { level, data, "func5" };
+    UNUSED_PARA(st);
+    for (int i = 0; i < 32; ++i) arr[i] = level + i;
+
+    disp("func5 level=%d, data=%.2f\n", level, data);
+    func6(level + 1, data * 1.5, "from_func5");
+}
+
+/* 第4层 */
+static void func4(int level, double data, const char *msg)
+{
+    volatile char local_str[128];
+    volatile int magic = 0xDEADBEEF;
+    snprintf((char*)local_str, sizeof(local_str), "%s at level %d", msg, level);
+    disp("func4: %s, magic=0x%X\n", local_str, magic);
+    func5(level + 1, data * 1.2);
+}
+
+/* 第3层 */
+static void func3(int level, double data)
+{
+    volatile double d = data;
+    volatile int counter = 0;
+    disp("func3 level=%d\n", level);
+    /* 简单的循环，增加栈上临时变量 */
+    for (int i = 0; i < 5; ++i) {
+        counter += i;
+        d *= 1.01;
+    }
+    func4(level + 1, d, "Hello from func3");
+}
+
+/* 第2层 */
+static void func2(int level, const char *prefix)
+{
+    volatile char combined[256];
+    snprintf((char*)combined, sizeof(combined), "%s[level=%d]", prefix, level);
+    disp("func2: %s\n", combined);
+    func3(level + 1, (double)level * 3.14);
+}
+
+/* 第1层 */
+static void func1(int start_level)
+{
+    volatile int my_level = start_level;
+    volatile double pi = 3.1415926;
+    UNUSED_PARA(pi);
+    disp("func1 start_level=%d\n", my_level);
+    func2(my_level + 1, "->func1");
+}
+
+/* ========== 间接调用（函数指针）增加复杂度 ========== */
+static void wrapper_func(void (*fn)(int), int arg)
+{
+    disp("\n");
+    disp("--- Enter wrapper_func, about to call function pointer ---\n");
+    fn(arg);
+    disp("--- wrapper_func finished ---\n");
+}
+
+void Test_coredump(void)
+{
+    disp("=== Complex Nesting Test for dump_stack ===\n");
+    disp("Call chain: main -> wrapper -> func1 -> func2 -> func3 -> func4 -> func5 -> func6 -> recursive_func x3\n");
+    disp("After reaching base case of recursion, dump_stack() will be called.\n");
+
+    /* 通过函数指针调用 func1，增加一层间接性 */
+    void (*entry)(int) = func1;
+    wrapper_func(entry, 1);
+    disp("\n");
+    disp("=== End of test ===\n");
+}
+
+/**************************************************************************//*
+* end test  
+**************************************************************************/
+

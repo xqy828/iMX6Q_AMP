@@ -542,7 +542,7 @@ typedef struct {
  * 当 depth == 0 时停止递归，并调用 dump_stack 打印完整调用栈。
  * 否则继续递归，同时调用其他函数增加栈帧混合。
  */
-void recursive_func(int depth, int max_depth)
+static void recursive_func(int depth, int max_depth)
 {
     /* 大量的局部变量，占用栈空间，测试回溯能否越过这些数据 */
     volatile int local_arr[64];
@@ -570,7 +570,7 @@ void recursive_func(int depth, int max_depth)
 }
 
 /* ========== 普通嵌套函数（第6层） ========== */
-void func6(int level, double data, const char *tag)
+static void func6(int level, double data, const char *tag)
 {
     volatile int local = level * 100;
     volatile double temp = data * 2.0;
@@ -584,7 +584,7 @@ void func6(int level, double data, const char *tag)
 }
 
 /* 第5层 */
-void func5(int level, double data)
+static void func5(int level, double data)
 {
     volatile int arr[32];
     volatile complex_t st = { level, data, "func5" };
@@ -596,7 +596,7 @@ void func5(int level, double data)
 }
 
 /* 第4层 */
-void func4(int level, double data, const char *msg)
+static void func4(int level, double data, const char *msg)
 {
     volatile char local_str[128];
     volatile int magic = 0xDEADBEEF;
@@ -606,7 +606,7 @@ void func4(int level, double data, const char *msg)
 }
 
 /* 第3层 */
-void func3(int level, double data)
+static void func3(int level, double data)
 {
     volatile double d = data;
     volatile int counter = 0;
@@ -620,7 +620,7 @@ void func3(int level, double data)
 }
 
 /* 第2层 */
-void func2(int level, const char *prefix)
+static void func2(int level, const char *prefix)
 {
     volatile char combined[256];
     snprintf((char*)combined, sizeof(combined), "%s[level=%d]", prefix, level);
@@ -629,7 +629,7 @@ void func2(int level, const char *prefix)
 }
 
 /* 第1层 */
-void func1(int start_level)
+static void func1(int start_level)
 {
     volatile int my_level = start_level;
     volatile double pi = 3.1415926;
@@ -639,7 +639,7 @@ void func1(int start_level)
 }
 
 /* ========== 间接调用（函数指针）增加复杂度 ========== */
-void wrapper_func(void (*fn)(int), int arg)
+static void wrapper_func(void (*fn)(int), int arg)
 {
     disp("\n");
     disp("--- Enter wrapper_func, about to call function pointer ---\n");

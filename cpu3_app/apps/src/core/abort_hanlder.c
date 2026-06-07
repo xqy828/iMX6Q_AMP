@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdarg.h>
-
+#include <string.h>
 #define BM_DFSR_WNR (1 << 11)   //!< Write not Read bit. 0=read, 1=write.
 #define BM_DFSR_FS4 (0x400)      //!< Fault status bit 4..
 #define BP_DFSR_FS4 (10)        //!< Bit position for FS[4].
@@ -37,7 +37,9 @@ enum {
     kDataAbortType = 0,
     kPrefetchAbortType = 1
 };
+arm_regs_t g_arm_regs_t;
 
+extern int do_coredump(void);
 int dump_regs(int abortType, arm_regs_p regs)
 {
     printf("\nOops, %s abort occurred!\n\n", (abortType == kDataAbortType) ? "data" : "prefetch");
@@ -111,13 +113,18 @@ int dump_regs(int abortType, arm_regs_p regs)
 
     uint32_t faultStatus = ((fsr & BM_DFSR_FS4) >> BP_DFSR_FS4) | (fsr & BM_DFSR_FS);
     printf("Fault status: 0x%x\n", faultStatus);
-
+    memcpy(&g_arm_regs_t,regs,sizeof(arm_regs_t));
+    do_coredump();
     return 0;
 }
 
+unsigned int get_save_sp(void)
+{
+    return  g_arm_regs_t.sp;
+}
 
-
-
-
-
-
+unsigned int get_save_regs(unsigned char **regs)
+{
+    *regs = (unsigned char*)&g_arm_regs_t;
+    return 0;
+}

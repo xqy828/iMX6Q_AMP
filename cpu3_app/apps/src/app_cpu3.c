@@ -16,24 +16,6 @@ extern int virt_uart_memory_init(void);
 unsigned int process = 0xdeadbeef;
 double gdPi = 3.141592654;
 
-void data_abort_test(void)
-{
-    unsigned int *p = (unsigned int *)0x79880001;
-    *p = 1;
-}
-
-void prefectch_abort_test(void)
-{
-    unsigned int badaddr = 0x79000000;
-    asm volatile(
-        "mov r5,%0\n"
-        "mov pc,r5\n"
-        :
-        : "r"(badaddr)
-        : "r5"
-                );
-}
-
 void cpu3_main(void)
 {
     const char Date[12] = __DATE__;
@@ -86,9 +68,9 @@ void cpu3_main(void)
     SCU_TimerSetupInterrupt();
     Test_dump_stack();
     coredump_initialize();
-    SCU_SendSgi2Cpu0();
+    //SCU_SendSgi2Cpu0();
     //application_main();
-
+    Test_coredump();
     for(;;)
     {
         clock_gettime(&time);
