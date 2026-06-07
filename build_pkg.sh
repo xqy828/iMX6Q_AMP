@@ -65,3 +65,9 @@ echo "Log: $LOG_FILE"
 echo "Contents:"
 tar -tf "$PKG_FILE"
 echo "Size: $(du -h "$PKG_FILE" | cut -f1)"
+
+echo "Clean all projects again"
+for proj in "${!PROJS[@]}"; do
+    echo "Cleaning: $proj"
+    cd "$ROOT/$proj" && make clean
+done
