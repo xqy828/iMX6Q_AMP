@@ -55,7 +55,7 @@ U32 InitCpu3(void);
 U32 getCpu3SectionAddr(const char* cpu3SectionName,UADDR *Cpu3SectionAddr);
 U32 Cpu3PowerOn(void);
 U32 Cpu3PowerOff(void);
-
+int install_cpu3_coredump_dev(void);
 
 #endif
 
