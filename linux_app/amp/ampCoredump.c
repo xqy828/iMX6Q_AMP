@@ -57,8 +57,8 @@ U32 getCpu3CoreDumpData(void)
     S32 mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
     if(mem_fd < 0)
     {
-    	fprintf(stderr, "open(/dev/mem) failed (%d)\n", errno);
-    	return RET_NOK;
+        fprintf(stderr, "open(/dev/mem) failed (%d)\n", errno);
+        return RET_NOK;
     }
     rc = getCpu3SectionAddr(".cpu3coredump",&Cpu3DumpDataAddr);
     if(rc != RET_OK)
