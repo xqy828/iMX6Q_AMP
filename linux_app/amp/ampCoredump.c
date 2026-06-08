@@ -104,8 +104,6 @@ U32 getCpu3CoreDumpData(void)
         munmap((void *)mm, PAGE_SIZE * PAGE_CNT);
         return -1;
     }
-    printf("Starting memory dump to %s (size: %d bytes)\n", filename, head.f_size);
-
     memcpy(&Cpu3CoredumpData[0],(unsigned char*)VirtAddr+sizeof(coredump_head_t),head.f_size);
     msleep(1);
         // Get current time for timestamp
@@ -122,6 +120,7 @@ U32 getCpu3CoreDumpData(void)
         munmap((void *)mm, PAGE_SIZE * PAGE_CNT);
         return -1;
     }
+    printf("Starting memory dump to %s (size: %d bytes)\n", filename, head.f_size);
     bytes_written = fwrite((void *)Cpu3CoredumpData,1,head.f_size,fp);
     if (bytes_written != head.f_size) {
         fprintf(stderr, "Failed to write complete memory dump: wrote %zd of %d bytes\n",
