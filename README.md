@@ -18,10 +18,11 @@ imx6q amp,just for fun
 ### Reference code:  
 ```css
  iMX6_Platform_SDK     
- https://github.com/antirez/linenoise 
- https://github.com/eclipse-threadx/threadx 
+ https://github.com/antirez/linenoise
+ https://github.com/eclipse-threadx/threadx
  https://github.com/OP-TEE/optee_os
  https://github.com/rockchip-linux/u-boot
+ https://github.com/apache/nuttx
 ```
 ### Development board:  
 ![输入图片说明](doc/e9v2.jpg)
