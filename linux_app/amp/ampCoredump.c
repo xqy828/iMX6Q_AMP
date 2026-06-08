@@ -88,9 +88,8 @@ U32 getCpu3CoreDumpData(void)
     VirtAddr = (UADDR)mm + uloffset;
     printf("CPU3 Core Dump VirtAddr:0x%x ,uloffset:0x%x,ulPhyBase:0x%x,PAGE_CNT:%d\n", VirtAddr,
             uloffset,ulPhyBase,PAGE_CNT);
+
     memcpy(&head,(unsigned char*)VirtAddr,sizeof(coredump_head_t));
-    printf("*(volatile unsigned int*)VirtAddr:0x%08x,head.magic:0x%08x,head.f_size:0x%08x,*(volatile unsigned int*)VirtAddr:0x%08x\n",
-        *(volatile unsigned int*)VirtAddr,head.magic,head.f_size,*(volatile unsigned int*)VirtAddr);
     close(mem_fd);
     if(head.magic != COREDUMP_MAGIC)
     {
