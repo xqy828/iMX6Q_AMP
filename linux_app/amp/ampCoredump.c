@@ -67,7 +67,7 @@ U32 getCpu3CoreDumpData(void)
     }
     printf("cpu3 core dump addr:0x%lx\r\n",Cpu3DumpDataAddr);
 
-    mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
+    mem_fd = open("/dev/mem", O_RDWR);// delete O_SYNC
     if(mem_fd < 0)
     {
         fprintf(stderr, "open(/dev/mem) failed (%d)\n", errno);

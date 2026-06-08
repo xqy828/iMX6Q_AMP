@@ -122,7 +122,7 @@ void scu_enable(void);
 void scu_join_smp(void);
 void scu_enable_maintenance_broadcast(void);
 void disable_strict_align_check(void);
-
+unsigned int read_actlr(void);
 
 
 #endif

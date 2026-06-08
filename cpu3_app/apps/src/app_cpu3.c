@@ -22,6 +22,7 @@ void cpu3_main(void)
     const char Time[9] = __TIME__;
     unsigned int vbar_reg = 0;
     unsigned int cpsr_reg = 0;
+    unsigned int actlr_reg = 0;
     struct timespec time = {0};
     disp("Build Time:%s-%s.\n",Date,Time);
     disp("float test pi = %lf\n",gdPi);
@@ -31,8 +32,6 @@ void cpu3_main(void)
     disp("cpsr reg = 0x%08lx\n",cpsr_reg);
     _arm_mrc(15, 0, vbar_reg, 12, 0, 0);
     disp("vbar reg = 0x%08lx\n",vbar_reg);
-    disp_scu_all_regs();
-    
     invalidate_tlb();
     
     arm_icache_enable();
@@ -42,6 +41,7 @@ void cpu3_main(void)
     arm_dcache_invalidate();
     arm_branch_target_cache_invalidate();
     arm_branch_prediction_enable();        
+#if 1
     /* enable scu Cache/TLB maintenance broadcast L2 cache and DDR 
      * The SCU maintains coherency between the L1 data cache of each core
      * Maintain data cache coherency between the Cortex-A9 processors.
@@ -53,12 +53,16 @@ void cpu3_main(void)
     scu_enable();
     scu_join_smp();
     scu_enable_maintenance_broadcast(); 
+#endif
+    disp_scu_all_regs();
     mmu_init();
     virt_uart_memory_init();
     disp("Enable MMU \n");
     mmu_enable();
     disp("Enable SIMD VFP \n");
     Enable_SIMD_VFP();
+    actlr_reg = read_actlr();
+    disp("actlr reg = 0x%08lx\n",actlr_reg);
     SetGlobalTime(0);
     disp("Neon Test ...\n");
     TestNeon();

@@ -20,6 +20,18 @@ unsigned int read_cbar_reg(void)
     return cbar_reg;
 }
 
+unsigned int read_actlr(void)
+{
+    unsigned int actlr;
+    asm volatile (
+    "mrc p15, 0, %0, c1, c0, 1"
+    : "=r" (actlr)
+    :
+    : "memory"
+    );
+    return actlr;
+}
+
 void disp_scu_all_regs(void)
 {
     unsigned int cbar_reg = 0;

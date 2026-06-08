@@ -166,8 +166,6 @@ static int elf_flush_dcache(struct elf_dumpinfo_s *cinfo)
   g_coredump_head.f_size = cinfo->dump_regions.offset;
   memcpy(&coredump_file[0],&g_coredump_head,sizeof(coredump_head_t));
   //flush d-cache
-  arm_dcache_flush_mlines(&coredump_file[0],sizeof(coredump_file));
-  _ARM_DSB();
   return  0;
 }
 
@@ -529,7 +527,6 @@ int coredump_initialize(void)
 {
   g_regions = g_memory_region;
   memset(&coredump_file[0],0x00,sizeof(coredump_file));
-  arm_dcache_flush_mlines(&coredump_file[0],sizeof(coredump_file));
   return 0;
 }
 
@@ -537,7 +534,7 @@ int do_coredump(void)
 {
   coredump(g_regions);
   SCU_SendSgi2Cpu0();
-  return  0;
+  return 0;
 }
 
 void data_abort_test(void)
