@@ -28,6 +28,7 @@
 #include <elf32.h>
 #include <elf.h>
 #include "debug.h"
+#include "asm_defines.h"
 #include "arm_cache.h"
 #include "board_memory.h"
 #include "generic_timer.h"
@@ -166,6 +167,7 @@ static int elf_flush_dcache(struct elf_dumpinfo_s *cinfo)
   memcpy(&coredump_file[0],&g_coredump_head,sizeof(coredump_head_t));
   //flush d-cache
   arm_dcache_flush_mlines(&coredump_file[0],sizeof(coredump_file));
+  _ARM_DSB();
   return  0;
 }
 
