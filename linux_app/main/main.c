@@ -26,8 +26,8 @@ S32 main (void)
     printf("\n%s\n",str);
     printf("Build Time:%s-%s.\n",Date,Time);
     KernelMmapInit();
-    install_cpu3_coredump_dev();
     InitCpu3();
+    install_cpu3_coredump_dev();
     SoftUartInit();
     XshellInit();
     StartCpu3();
