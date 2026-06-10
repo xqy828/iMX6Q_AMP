@@ -1,5 +1,7 @@
 WORK_DIR := $(shell pwd)
 CPP_DTSI_DIR :=$(WORK_DIR)/CPP_DTSI
+EXTRA_DTSI_DIR =$(WORK_DIR)/../tools_app/reboot/dts
+
 DTSI_DIR :=$(WORK_DIR)/imx6q
 export ARCH=arm
 export CROSS_COMPILE=arm-none-linux-gnueabihf-
@@ -8,7 +10,7 @@ export CROSS_COMPILE=arm-none-linux-gnueabihf-
 KERNEL_SRC = $(shell dirname $(WORK_DIR))/linux-6.5
 IFLAGS += -I$(KERNEL_SRC)/include 
 IFLAGS += -I$(KERNEL_SRC)/arch/arm/boot/dts/nxp/imx
-
+IFLAGS += -I$(EXTRA_DTSI_DIR)
 DTS_PREPROCESSED := $(WORK_DIR)/DTS_PREPROCESSED
 PREPROCESSED_DTS :=imx6q-custom.preprocessed.dts
 

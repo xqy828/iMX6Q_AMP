@@ -1,0 +1,26 @@
+// SPDX-License-Identifier: GPL-2.0
+// Device tree fragment for reboot via GPIO6_IO31
+// Include in imx6q-custom.dts or apply as overlay
+
+#include <dt-bindings/gpio/gpio.h>
+
+// Pinctrl: configure EIM_BCLK pad as GPIO6_IO31, default high (pull-up enabled)
+&iomuxc {
+    imx6qdl-sabresd {
+        pinctrl_reboot: rebootgrp {
+            fsl,pins = <
+                MX6QDL_PAD_EIM_BCLK__GPIO6_IO31  0x1b0b0
+            >;
+        };
+    };
+};
+
+/ {
+    reboot {
+        compatible = "nxp,imx6q-reboot";
+        pinctrl-names = "default";
+        pinctrl-0 = <&pinctrl_reboot>;
+        reset-gpios = <&gpio6 31 GPIO_ACTIVE_LOW>;
+        status = "okay";
+    };
+};
