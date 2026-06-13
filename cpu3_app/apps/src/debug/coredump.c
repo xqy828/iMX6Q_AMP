@@ -27,20 +27,21 @@
 #include <stdbool.h>
 #include <elf32.h>
 #include <elf.h>
+//#define DEBUG
 #include "debug.h"
 #include "asm_defines.h"
 #include "arm_cache.h"
 #include "board_memory.h"
 #include "generic_timer.h"
 #include "interrupt.h"
-#include "public.h"
+
 
 #define ALIGN_UP(x, align_to)    (((x) + ((align_to)-1)) & ~((align_to)-1))
 #define ALIGN_DOWN(x, align_to) ((x) & ~((align_to)-1))
 
 extern char __supervisor_stack_bottom[];// bottom 
 extern char __supervisor_stack_top[];// top
-#define COREDUMP_INFONAME_SIZE  ALIGN_UP(SUPERVISOR_STACK_SIZE, 8)
+#define COREDUMP_INFONAME_SIZE  16
 
 #define MIN(a,b)      (((a) < (b)) ? (a) : (b))
 #define MAX(a,b)      (((a) > (b)) ? (a) : (b))
@@ -65,7 +66,6 @@ extern char __supervisor_stack_top[];// top
 #define EF_FLAG                  (EF_ARM_EABI_VER5 | EF_ARM_ABI_FLOAT)
 
 typedef unsigned long elf_gregset_t[18];
-unsigned char g_running_regs[18*4];
 
 typedef struct elf_prpsinfo_s
 {
@@ -139,7 +139,10 @@ struct elf_dumpinfo_s
 struct coredump_info_s
 {
   struct timespec time;
-  size_t          size;
+  unsigned int size;
+  char Date[12];
+  char Time[9];
+  char pad[3];
 };
 
 typedef struct elf_coredump_head
@@ -158,7 +161,7 @@ __attribute__ ((section (".cpu3coredump")))  __attribute__ ((aligned (4096))) un
 
 coredump_head_t g_coredump_head;
 extern unsigned int get_save_sp(void);
-unsigned int get_save_regs(unsigned char **regs);
+extern unsigned int get_save_regs(struct pt_regs **regs);
 
 static int elf_flush_dcache(struct elf_dumpinfo_s *cinfo)
 {
@@ -191,12 +194,13 @@ static int elf_get_info_note_size(void)
   return sizeof(Elf_Nhdr) + COREDUMP_INFONAME_SIZE + sizeof(struct coredump_info_s);
 }
 
-static void elf_emit_tcb_phdr(struct elf_dumpinfo_s *cinfo,Elf_Phdr *phdr, off_t *offset)
+static void elf_emit_task_phdr(struct elf_dumpinfo_s *cinfo,Elf_Phdr *phdr, off_t *offset)
 {
   unsigned long int sp = 0;
   phdr->p_vaddr = 0;
 
-  sp = get_save_sp();// to do  
+  sp = get_save_sp();
+  debug("sp=0x%08x\n",sp);
   if (sp > (unsigned long int)__supervisor_stack_top &&
       sp < (unsigned long int)__supervisor_stack_bottom)
   {
@@ -229,22 +233,16 @@ static int elf_emit_align(struct elf_dumpinfo_s *cinfo)
   off_t align = ALIGN_UP(cinfo->dump_regions.offset,ELF_PAGESIZE) - cinfo->dump_regions.offset;
   unsigned char null[256];
   off_t total = align;
-  off_t ret = 0;
-
+  debug("total=%d,offset=%d\n",total,cinfo->dump_regions.offset);
   memset(null, 0, sizeof(null));
 
   while (total > 0)
-    {
-      ret = elf_emit(cinfo, null, total > sizeof(null) ? sizeof(null) : total);
-      if (ret <= 0)
-        {
-          break;
-        }
+  {
+    elf_emit(cinfo, null, total > sizeof(null) ? sizeof(null) : total);
+    total -= sizeof(null);
+  }
 
-      total -= ret;
-    }
-
-  return ret < 0 ? ret : align;
+  return 0;
 }
 
 static int elf_emit_hdr(struct elf_dumpinfo_s *cinfo,int segs)
@@ -287,7 +285,7 @@ static void elf_emit_phdr(struct elf_dumpinfo_s *cinfo,int stksegs, int memsegs)
   elf_emit(cinfo, &phdr, sizeof(phdr));
 
   phdr.p_align  = ELF_PAGESIZE;
-  elf_emit_tcb_phdr(cinfo,&phdr, &offset);
+  elf_emit_task_phdr(cinfo,&phdr, &offset);
 
   /* Write program headers for segments dump */
 
@@ -303,7 +301,7 @@ static void elf_emit_phdr(struct elf_dumpinfo_s *cinfo,int stksegs, int memsegs)
     offset       += ALIGN_UP(phdr.p_memsz, ELF_PAGESIZE);
     elf_emit(cinfo, &phdr, sizeof(phdr));
   }
-
+  // user defined note
   memset(&phdr, 0, sizeof(Elf_Phdr));
   phdr.p_type   = PT_NOTE;
   phdr.p_offset = ALIGN_UP(offset, ELF_PAGESIZE);
@@ -313,39 +311,32 @@ static void elf_emit_phdr(struct elf_dumpinfo_s *cinfo,int stksegs, int memsegs)
   elf_emit(cinfo, &phdr, sizeof(phdr));
 }
 
-static void elf_emit_tcb_note(struct elf_dumpinfo_s *cinfo)
+static void elf_emit_note(struct elf_dumpinfo_s *cinfo)
 {
-  char name[16];
+  char name[COREDUMP_INFONAME_SIZE];
   elf_prstatus_t status;
   elf_prpsinfo_t info;
-  unsigned long int *regs;
   Elf_Nhdr nhdr;
   int i;
-  size_t pad;
-  unsigned char *p = NULL;
+  struct pt_regs *p_arm_regs = NULL;
+
   memset(name,   0x0, sizeof(name));
   memset(&info,   0x0, sizeof(info));
   memset(&status, 0x0, sizeof(status));
 
   /* Fill Process info */
 
-  nhdr.n_namesz = 5; // "core" + 1
+  nhdr.n_namesz = sizeof(name);
   nhdr.n_descsz = sizeof(info);
   nhdr.n_type   = NT_PRPSINFO;
 
   elf_emit(cinfo, &nhdr, sizeof(nhdr));
 
-  strlcpy(name,"CORE", sizeof(name));
+  strlcpy(name,"i.mx6q", sizeof(name));
   elf_emit(cinfo, name,nhdr.n_namesz);
-  pad = ALIGN_UP(nhdr.n_namesz, 4) - nhdr.n_namesz;
-  if (pad > 0)
-  {
-    static const uint8_t zero[3] = {0};
-    elf_emit(cinfo, zero, pad);
-  }
 
-  info.pr_pid   = 0;
-  strlcpy(info.pr_fname,"i.mx6q:", sizeof(info.pr_fname));
+  info.pr_pid   = 1;
+  strlcpy(info.pr_fname,"cpu3_app", sizeof(info.pr_fname));
   elf_emit(cinfo, &info, sizeof(info));
 
   /* Fill Process status */
@@ -353,40 +344,29 @@ static void elf_emit_tcb_note(struct elf_dumpinfo_s *cinfo)
   nhdr.n_type   = NT_PRSTATUS;
   elf_emit(cinfo, &nhdr, sizeof(nhdr));
   elf_emit(cinfo, name, sizeof(name));
-  status.pr_pid = 0;
-  p = g_running_regs;
-  get_save_regs(&p);
-  regs = (unsigned long int *)g_running_regs;
-  if (regs != NULL)
+  status.pr_pid = 1;
+
+  get_save_regs(&p_arm_regs);
+  for (i = 0; i < MIN(nitems(status.pr_regs), 17); i++)// R0 - R15,CPSR
   {
-    for (i = 0; i < MIN(nitems(status.pr_regs), 17); i++)// R0 - R15,CPSR
-    {
-      status.pr_regs[i] = *(unsigned long int *)(regs + i);
-    }
+    status.pr_regs[i] = p_arm_regs->uregs[i];
   }
   elf_emit(cinfo, &status, sizeof(status));
 }
 
-static void elf_emit_tcb_stack(struct elf_dumpinfo_s *cinfo)
+static void elf_emit_stack(struct elf_dumpinfo_s *cinfo)
 {
   unsigned long int buf = 0;
   unsigned long int sp;
   size_t len;
 
-  sp = get_save_sp();  // to do  
+  sp = get_save_sp();
   if (sp > (unsigned long int)__supervisor_stack_top &&
       sp < (unsigned long int)__supervisor_stack_bottom)
   {
     len = (unsigned long int)__supervisor_stack_bottom - sp;
     buf = sp;
   }
-
-  if (buf == 0)
-  {
-    buf = (unsigned long int)__supervisor_stack_top;
-    len = (unsigned long int)__supervisor_stack_bottom - (unsigned long int)__supervisor_stack_top;
-  }
-
   sp  = ALIGN_DOWN(buf, PROGRAM_ALIGNMENT);
   len = ALIGN_UP(len + (buf - sp), PROGRAM_ALIGNMENT);
   buf = sp;
@@ -396,17 +376,6 @@ static void elf_emit_tcb_stack(struct elf_dumpinfo_s *cinfo)
   elf_emit_align(cinfo);
 }
 
-static void elf_emit_note(struct elf_dumpinfo_s *cinfo)
-{
-  elf_emit_tcb_note(cinfo);
-}
-
-static void elf_emit_stack(struct elf_dumpinfo_s *cinfo)
-{
-  elf_emit_tcb_stack(cinfo);
-}
-
- 
 static void elf_emit_memory(struct elf_dumpinfo_s *cinfo, int memsegs)
 {
   int i;
@@ -445,27 +414,23 @@ static void elf_emit_info_note( struct elf_dumpinfo_s *cinfo)
 {
   struct coredump_info_s info;
   Elf_Nhdr nhdr;
-  char name[16];
-  int pad = 0;
+  char name[COREDUMP_INFONAME_SIZE];
   memset(&info, 0x0, sizeof(info));
   memset(name, 0x0, sizeof(name));
 
-  nhdr.n_namesz = 5;
+  nhdr.n_namesz = sizeof(name);
   nhdr.n_descsz = sizeof(info);
   nhdr.n_type   = COREDUMP_MAGIC;
 
   elf_emit(cinfo, &nhdr, sizeof(nhdr));
 
-  strlcpy(name, "CORE", sizeof(name));
+  strlcpy(name, "i.mx6q", sizeof(name));
   elf_emit(cinfo, name,nhdr.n_namesz);
-  pad = ALIGN_UP(nhdr.n_namesz, 4) - nhdr.n_namesz;
-  if (pad > 0)
-  {
-    static const uint8_t zero[3] = {0};
-    elf_emit(cinfo, zero, pad);
-  }
-
   info.size = cinfo->dump_regions.offset + sizeof(info);
+  strncpy(info.Date, __DATE__, sizeof(info.Date)-1);
+  info.Date[sizeof(info.Date)-1] = 0;
+  strncpy(info.Time, __TIME__, sizeof(info.Time)-1);
+  info.Time[sizeof(info.Time)-1] = 0;
   clock_gettime(&info.time);
   elf_emit(cinfo, &info, sizeof(info));
 }
@@ -483,6 +448,7 @@ int coredump(const struct memory_region_s *regions)
       for (; cinfo.regions[memsegs].start <
              cinfo.regions[memsegs].end; memsegs++);
     }
+    debug("memsegs=%d,stksegs=%d\n",memsegs,stksegs);
     /* 
     * Fill notes section, with additional one for program header,
     * and one for the core file info defined by NuttX.
@@ -532,7 +498,7 @@ int coredump_initialize(void)
 
 int do_coredump(void)
 {
-  coredump(g_regions);
+  coredump(NULL);
   SCU_SendSgi2Cpu0();
   return 0;
 }

@@ -133,8 +133,8 @@ int dump_regs(int abortType, arm_regs_p regs)
     g_arm_regs_t.ARM_lr = regs->lr;
     g_arm_regs_t.ARM_pc = regs->pc;
     g_arm_regs_t.ARM_cpsr = regs->cpsr;
-    //do_coredump();
     dump_stack_isr(&g_arm_regs_t);
+    do_coredump();
     return 0;
 }
 
@@ -143,8 +143,8 @@ unsigned int get_save_sp(void)
     return  g_arm_regs_t.ARM_sp;
 }
 
-unsigned int get_save_regs(unsigned char **regs)
+unsigned int get_save_regs(struct pt_regs **regs)
 {
-    *regs = (unsigned char*)&g_arm_regs_t;
+    *regs = &g_arm_regs_t;
     return 0;
 }
