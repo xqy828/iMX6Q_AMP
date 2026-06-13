@@ -194,7 +194,7 @@ static int elf_get_info_note_size(void)
   return sizeof(Elf_Nhdr) + COREDUMP_INFONAME_SIZE + sizeof(struct coredump_info_s);
 }
 
-static void elf_emit_task_phdr(struct elf_dumpinfo_s *cinfo,Elf_Phdr *phdr, off_t *offset)
+static void elf_emit_stack_phdr(struct elf_dumpinfo_s *cinfo,Elf_Phdr *phdr, off_t *offset)
 {
   unsigned long int sp = 0;
   phdr->p_vaddr = 0;
@@ -285,7 +285,7 @@ static void elf_emit_phdr(struct elf_dumpinfo_s *cinfo,int stksegs, int memsegs)
   elf_emit(cinfo, &phdr, sizeof(phdr));
 
   phdr.p_align  = ELF_PAGESIZE;
-  elf_emit_task_phdr(cinfo,&phdr, &offset);
+  elf_emit_stack_phdr(cinfo,&phdr, &offset);
 
   /* Write program headers for segments dump */
 
