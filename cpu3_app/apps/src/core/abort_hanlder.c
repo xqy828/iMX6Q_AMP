@@ -39,9 +39,27 @@ enum {
     kPrefetchAbortType = 1
 };
 struct pt_regs g_arm_regs_t;
+struct user_vfp g_arm_vfp_t;
 
 extern int do_coredump(void);
 extern void dump_stack_isr(struct pt_regs *regs);
+
+void vfp_read_d02d31(struct user_vfp *ctx)
+{
+    asm __volatile__ (
+        "vstm %0, {d0 - d15}\n"
+        :
+        : "r"(&ctx->fpregs[0])
+        : "memory"
+    );
+    asm __volatile__ (
+        "vstm %0, {d16 - d31}\n"
+        :
+        : "r"(&ctx->fpregs[16])
+        : "memory"
+    );
+    asm __volatile__ ("vmrs %0, fpscr" : "=r"(ctx->fpscr));
+}
 
 int dump_regs(int abortType, arm_regs_p regs)
 {
@@ -134,6 +152,7 @@ int dump_regs(int abortType, arm_regs_p regs)
     g_arm_regs_t.ARM_pc = regs->pc;
     g_arm_regs_t.ARM_cpsr = regs->cpsr;
     dump_stack_isr(&g_arm_regs_t);
+    vfp_read_d02d31(&g_arm_vfp_t);
     do_coredump();
     return 0;
 }
@@ -146,5 +165,11 @@ unsigned int get_save_sp(void)
 unsigned int get_save_regs(struct pt_regs **regs)
 {
     *regs = &g_arm_regs_t;
+    return 0;
+}
+
+unsigned int get_save_vfp_regs(struct user_vfp **regs)
+{
+    *regs = &g_arm_vfp_t;
     return 0;
 }

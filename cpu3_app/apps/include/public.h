@@ -56,6 +56,11 @@ struct pt_regs
 #define ARM_r0		uregs[0]
 #define ARM_ORIG_r0	uregs[17]
 
+struct user_vfp {
+    unsigned long long fpregs[32];
+    unsigned long fpscr;
+};
+
 static inline void reg_write32(unsigned int Addr, unsigned int Value)
 {
     volatile unsigned int  *TempAddr = (volatile unsigned int *)Addr;

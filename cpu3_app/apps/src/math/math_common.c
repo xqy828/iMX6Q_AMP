@@ -5,7 +5,9 @@
 #include <string.h>
 #include <math.h>
 #include "public.h"
- 
+
+extern void vfp_read_d02d31(struct user_vfp *ctx);
+
 float Q_rsqrt(float number)
 {
     long int i;
@@ -65,6 +67,32 @@ void TestRoundData(unsigned int Row,unsigned int Line)
     }
 }
 
+int test_vfp(void)
+{
+    struct user_vfp ctx;
+    const double val_pi = 3.14;
+    const double val_e  = 2.718;
+
+    asm __volatile__ (
+        "vldr d0, %0\n"
+        "vldr d31, %1\n"
+        :
+        : "m"(val_pi), "m"(val_e)
+        : "d0", "d31", "memory"
+    );
+
+    vfp_read_d02d31(&ctx);
+    
+    double d0_val, d31_val;
+    memcpy(&d0_val, &ctx.fpregs[0], sizeof(double));
+    memcpy(&d31_val, &ctx.fpregs[31], sizeof(double));
+    
+    disp("D0  = %.6f\n", d0_val);
+    disp("D31 = %.6f\n", d31_val);
+    disp("FPSCR = 0x%08x\n", ctx.fpscr);
+    
+    return 0;
+}
 
 
 
