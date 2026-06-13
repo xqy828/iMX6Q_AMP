@@ -522,6 +522,56 @@ void dump_stack(void)
     print_stack_arm32(&state, stack_top, stack_bottom - stack_top);
 }
 
+void dump_stack_isr(struct pt_regs *regs)
+{
+    struct unwind_state_arm32 state = { };
+    unsigned long int stack_bottom = 0;
+    unsigned long int stack_top = 0;
+    int i = 0;    
+    unsigned long int pc = 0, lr = 0;
+    /* Don't use memset(), which updates LR ! */
+    for (i = 0; i < 16; i++)
+    {
+        state.registers[i] = 0;
+    }
+    state.update_mask = 0;
+    state.start_pc = 0;
+    state.entries = 0;
+    state.insn = 0;
+    state.byte = 0;
+
+    /* r7: Thumb-style frame pointer */
+    state.registers[7] = regs->ARM_r7;
+    /* r11: ARM-style frame pointer */
+    state.registers[FP] = regs->ARM_fp;
+    state.registers[SP] = regs->ARM_sp;
+    state.registers[LR] = regs->ARM_lr;
+    /*
+     * Add 4 to make sure that we have an address well inside this function.
+     * This is needed because we're subtracting 2 from PC when calling
+     * find_index() above. See a comment there for more details.
+     */
+    state.registers[PC] = regs->ARM_pc;
+    get_stack_hard_limits(&stack_bottom, &stack_top);
+    disp("Stack:0x%lx-0x%lx\n",stack_top,stack_bottom);
+    pc = state.registers[PC];
+    lr = state.registers[LR];
+    disp("\n");
+    disp("Call trace:\n");
+    disp("  PC:    [< %08lx >]\n", pc);
+    disp("  LR:    [< %08lx >]\n", lr);
+    disp("\n");
+    disp("Stack:\n");
+#if 1
+    do {
+        pc = (unsigned long int)state.registers[PC];
+        disp("    [< %08lx >]\n", pc);
+    } while (unwind_stack_arm32(&state, stack_top, stack_bottom - stack_top));
+#endif
+    disp("\nCopy info from \"Call trace...\" to a file(eg. dump.txt)\n"
+        "and run command in your project: "
+        "./scripts/stacktrace.sh dump.txt \n");
+}
 
 /**************************************************************************//*
 * dummp stack function test  
