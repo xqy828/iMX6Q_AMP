@@ -3,7 +3,7 @@
 ### Project Title
 imx6q amp,just for fun   
 ### core function:
-- 1 Linux runs on CPU0~CPU2, ThreadX applications or  bare-metal applications on CPU3.   
+- 1 Linux 6.5.0 runs on CPU0~CPU2, ThreadX applications or  bare-metal applications on CPU3.   
 - 2 Linux loads ELF firmware to boot CPU3. Virtual UART based on shared memory forwards CPU3 logs to Linux console.   
 - 3 Linux xshell debugging tool. interactive command-line interface supporting remote function calls for target processes during runtime.   
 - 4 Bare-metal on CPU3 performs stack backtrace, and Linux script parses symbol addresses to resolve function names. 
