@@ -63,6 +63,8 @@ void vfp_read_d02d31(struct user_vfp *ctx)
 
 int dump_regs(int abortType, arm_regs_p regs)
 {
+    unsigned long long val = 0;
+    unsigned long long val_1 = 0;
     printf("\nOops, %s abort occurred!\n\n", (abortType == kDataAbortType) ? "data" : "prefetch");
     printf("Registers at point of exception:\n");
 
@@ -134,6 +136,75 @@ int dump_regs(int abortType, arm_regs_p regs)
 
     uint32_t faultStatus = ((fsr & BM_DFSR_FS4) >> BP_DFSR_FS4) | (fsr & BM_DFSR_FS);
     printf("Fault status: 0x%x\n", faultStatus);
+    vfp_read_d02d31(&g_arm_vfp_t);
+    printf("fpscr: 0x%016x\n", g_arm_vfp_t.fpscr);
+
+    val = g_arm_vfp_t.fpregs[0];
+    val_1 = g_arm_vfp_t.fpregs[8];
+    printf("D0 = 0x%08lx%08lx     D8 =  0x%08lx%08lx\n",  
+        (unsigned long)(val >> 32), (unsigned long)(val),(unsigned long)(val_1 >> 32), (unsigned long)(val_1));
+    val = g_arm_vfp_t.fpregs[1];
+    val_1 = g_arm_vfp_t.fpregs[9];
+    printf("D1 = 0x%08lx%08lx     D9 =  0x%08lx%08lx\n",  
+        (unsigned long)(val >> 32), (unsigned long)(val),(unsigned long)(val_1 >> 32), (unsigned long)(val_1));
+    val = g_arm_vfp_t.fpregs[2];
+    val_1 = g_arm_vfp_t.fpregs[10];
+    printf("D2 = 0x%08lx%08lx     D10 =  0x%08lx%08lx\n",  
+        (unsigned long)(val >> 32), (unsigned long)(val),(unsigned long)(val_1 >> 32), (unsigned long)(val_1));
+    val = g_arm_vfp_t.fpregs[3];
+    val_1 = g_arm_vfp_t.fpregs[11];
+    printf("D3 = 0x%08lx%08lx     D11 =  0x%08lx%08lx\n",  
+        (unsigned long)(val >> 32), (unsigned long)(val),(unsigned long)(val_1 >> 32), (unsigned long)(val_1));
+    val = g_arm_vfp_t.fpregs[4];
+    val_1 = g_arm_vfp_t.fpregs[12];
+    printf("D4 = 0x%08lx%08lx     D12 =  0x%08lx%08lx\n",  
+        (unsigned long)(val >> 32), (unsigned long)(val),(unsigned long)(val_1 >> 32), (unsigned long)(val_1));
+    val = g_arm_vfp_t.fpregs[5];
+    val_1 = g_arm_vfp_t.fpregs[13];
+    printf("D5 = 0x%08lx%08lx     D13 =  0x%08lx%08lx\n",  
+        (unsigned long)(val >> 32), (unsigned long)(val),(unsigned long)(val_1 >> 32), (unsigned long)(val_1));
+    val = g_arm_vfp_t.fpregs[6];
+    val_1 = g_arm_vfp_t.fpregs[14];
+    printf("D6 = 0x%08lx%08lx     D14 =  0x%08lx%08lx\n",  
+        (unsigned long)(val >> 32), (unsigned long)(val),(unsigned long)(val_1 >> 32), (unsigned long)(val_1));
+    val = g_arm_vfp_t.fpregs[7];
+    val_1 = g_arm_vfp_t.fpregs[15];
+    printf("D7 = 0x%08lx%08lx     D15 =  0x%08lx%08lx\n",  
+        (unsigned long)(val >> 32), (unsigned long)(val),(unsigned long)(val_1 >> 32), (unsigned long)(val_1));
+    printf("====================================================\n");
+    val = g_arm_vfp_t.fpregs[16];
+    val_1 = g_arm_vfp_t.fpregs[24];
+    printf("D16 = 0x%08lx%08lx     D24 =  0x%08lx%08lx\n",  
+        (unsigned long)(val >> 32), (unsigned long)(val),(unsigned long)(val_1 >> 32), (unsigned long)(val_1));
+    val = g_arm_vfp_t.fpregs[17];
+    val_1 = g_arm_vfp_t.fpregs[25];
+    printf("D17 = 0x%08lx%08lx     D25=  0x%08lx%08lx\n",  
+        (unsigned long)(val >> 32), (unsigned long)(val),(unsigned long)(val_1 >> 32), (unsigned long)(val_1));
+    val = g_arm_vfp_t.fpregs[18];
+    val_1 = g_arm_vfp_t.fpregs[26];
+    printf("D18 = 0x%08lx%08lx     D26 =  0x%08lx%08lx\n",  
+        (unsigned long)(val >> 32), (unsigned long)(val),(unsigned long)(val_1 >> 32), (unsigned long)(val_1));
+    val = g_arm_vfp_t.fpregs[19];
+    val_1 = g_arm_vfp_t.fpregs[27];
+    printf("D19 = 0x%08lx%08lx     D27 =  0x%08lx%08lx\n",  
+        (unsigned long)(val >> 32), (unsigned long)(val),(unsigned long)(val_1 >> 32), (unsigned long)(val_1));
+    val = g_arm_vfp_t.fpregs[20];
+    val_1 = g_arm_vfp_t.fpregs[28];
+    printf("D20 = 0x%08lx%08lx     D28 =  0x%08lx%08lx\n",  
+        (unsigned long)(val >> 32), (unsigned long)(val),(unsigned long)(val_1 >> 32), (unsigned long)(val_1));
+    val = g_arm_vfp_t.fpregs[21];
+    val_1 = g_arm_vfp_t.fpregs[29];
+    printf("D21 = 0x%08lx%08lx     D29 =  0x%08lx%08lx\n",  
+        (unsigned long)(val >> 32), (unsigned long)(val),(unsigned long)(val_1 >> 32), (unsigned long)(val_1));
+    val = g_arm_vfp_t.fpregs[22];
+    val_1 = g_arm_vfp_t.fpregs[30];
+    printf("D22 = 0x%08lx%08lx     D30 =  0x%08lx%08lx\n",  
+        (unsigned long)(val >> 32), (unsigned long)(val),(unsigned long)(val_1 >> 32), (unsigned long)(val_1));
+    val = g_arm_vfp_t.fpregs[23];
+    val_1 = g_arm_vfp_t.fpregs[31];
+    printf("D23 = 0x%08lx%08lx     D31 =  0x%08lx%08lx\n",  
+        (unsigned long)(val >> 32), (unsigned long)(val),(unsigned long)(val_1 >> 32), (unsigned long)(val_1));
+
     g_arm_regs_t.ARM_r0 = regs->r0;
     g_arm_regs_t.ARM_r1 = regs->r1;
     g_arm_regs_t.ARM_r2 = regs->r2;
@@ -152,7 +223,6 @@ int dump_regs(int abortType, arm_regs_p regs)
     g_arm_regs_t.ARM_pc = regs->pc;
     g_arm_regs_t.ARM_cpsr = regs->cpsr;
     dump_stack_isr(&g_arm_regs_t);
-    vfp_read_d02d31(&g_arm_vfp_t);
     do_coredump();
     return 0;
 }
