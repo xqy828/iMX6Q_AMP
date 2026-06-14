@@ -54,7 +54,7 @@ extern char __supervisor_stack_top[];// top
 #define EF_ARM_ABI_FLOAT_HARD    0x00000400
 #define EF_ARM_EABI_VER5         0x05000000
 #ifdef __VFP_FP__
-#  ifdef __ARM_PCS_VFP
+#  ifdef __ARM_PCS
 #    define EF_ARM_ABI_FLOAT     EF_ARM_ABI_FLOAT_HARD
 #  else
 #    define EF_ARM_ABI_FLOAT     EF_ARM_ABI_FLOAT_SOFT
@@ -116,6 +116,8 @@ typedef struct elf_prstatus_s
   int            pr_fpvalid;  /* True if math co-processor being used */
 } elf_prstatus_t;
 
+struct user_vfp elf_vfp_t;
+
 struct memory_region_s
 {
   unsigned long int start;   /* Start address of this region */
@@ -162,7 +164,7 @@ __attribute__ ((section (".cpu3coredump")))  __attribute__ ((aligned (4096))) un
 coredump_head_t g_coredump_head;
 extern unsigned int get_save_sp(void);
 extern unsigned int get_save_regs(struct pt_regs **regs);
-
+extern unsigned int get_save_vfp_regs(struct user_vfp **regs);
 static int elf_flush_dcache(struct elf_dumpinfo_s *cinfo)
 {
   g_coredump_head.magic = COREDUMP_MAGIC;
@@ -271,22 +273,22 @@ static int elf_emit_hdr(struct elf_dumpinfo_s *cinfo,int segs)
 
 static void elf_emit_phdr(struct elf_dumpinfo_s *cinfo,int stksegs, int memsegs)
 {
-  off_t offset = cinfo->dump_regions.offset + (stksegs + memsegs + 1 + 1) * sizeof(Elf_Phdr);
+  off_t offset = cinfo->dump_regions.offset + (stksegs + memsegs + 1 + 1 + 1) * sizeof(Elf_Phdr);
   Elf_Phdr phdr;
   int i;
 
   memset(&phdr, 0, sizeof(Elf_Phdr));
-
+  debug("phdr.p_offset:0x%08x,offset:0x%08x\n",phdr.p_offset,offset);
   phdr.p_type   = PT_NOTE;
   phdr.p_offset = offset;
   phdr.p_filesz = elf_get_note_size(stksegs);
   offset       += phdr.p_filesz;
 
   elf_emit(cinfo, &phdr, sizeof(phdr));
-
+  debug("phdr.p_offset:0x%08x,offset:0x%08x\n",phdr.p_offset,offset);
   phdr.p_align  = ELF_PAGESIZE;
   elf_emit_stack_phdr(cinfo,&phdr, &offset);
-
+  debug("phdr.p_offset:0x%08x,offset:0x%08x\n",phdr.p_offset,offset);
   /* Write program headers for segments dump */
 
   for (i = 0; i < memsegs; i++)
@@ -301,14 +303,23 @@ static void elf_emit_phdr(struct elf_dumpinfo_s *cinfo,int stksegs, int memsegs)
     offset       += ALIGN_UP(phdr.p_memsz, ELF_PAGESIZE);
     elf_emit(cinfo, &phdr, sizeof(phdr));
   }
-  // user defined note
+  debug("phdr.p_offset:0x%08x,offset:0x%08x\n",phdr.p_offset,offset);
+  // vfp regs note
   memset(&phdr, 0, sizeof(Elf_Phdr));
   phdr.p_type   = PT_NOTE;
   phdr.p_offset = ALIGN_UP(offset, ELF_PAGESIZE);
+  phdr.p_filesz = sizeof(Elf_Nhdr) + COREDUMP_INFONAME_SIZE + sizeof(struct user_vfp);
+  offset       += phdr.p_filesz;
+  elf_emit(cinfo, &phdr, sizeof(phdr));
+  debug("phdr.p_offset:0x%08x,offset:0x%08x\n",phdr.p_offset,offset);
+  // user defined note
+  memset(&phdr, 0, sizeof(Elf_Phdr));
+  phdr.p_type   = PT_NOTE;
+  phdr.p_offset = ALIGN_UP(offset + ELF_PAGESIZE, ELF_PAGESIZE);
   phdr.p_filesz = elf_get_info_note_size();
   offset       += phdr.p_filesz;
-
   elf_emit(cinfo, &phdr, sizeof(phdr));
+  debug("phdr.p_offset:0x%08x,offset:0x%08x\n",phdr.p_offset,offset);
 }
 
 static void elf_emit_note(struct elf_dumpinfo_s *cinfo)
@@ -410,6 +421,28 @@ static void elf_emit_memory(struct elf_dumpinfo_s *cinfo, int memsegs)
   }
 }
 
+static void elf_emit_vfp_note( struct elf_dumpinfo_s *cinfo)
+{ 
+  Elf_Nhdr nhdr;
+  char name[COREDUMP_INFONAME_SIZE];
+  struct user_vfp *p_elf_vfp_t = NULL;
+  memset(&elf_vfp_t, 0x0, sizeof(elf_vfp_t));
+  memset(name, 0x0, sizeof(name));
+
+  nhdr.n_namesz = sizeof(name);
+  nhdr.n_descsz = sizeof(elf_vfp_t);
+  nhdr.n_type   = NT_ARM_VFP;
+  elf_emit(cinfo, &nhdr, sizeof(nhdr));
+
+  strlcpy(name, "i.mx6q", sizeof(name));
+  elf_emit(cinfo, name,nhdr.n_namesz);
+
+  /* Fill Process vfp regs */
+  get_save_vfp_regs(&p_elf_vfp_t);
+  memcpy(&elf_vfp_t,p_elf_vfp_t,sizeof(struct user_vfp));
+  elf_emit(cinfo, &elf_vfp_t, sizeof(struct user_vfp));
+}
+
 static void elf_emit_info_note( struct elf_dumpinfo_s *cinfo)
 {
   struct coredump_info_s info;
@@ -449,11 +482,12 @@ int coredump(const struct memory_region_s *regions)
              cinfo.regions[memsegs].end; memsegs++);
     }
     debug("memsegs=%d,stksegs=%d\n",memsegs,stksegs);
+
     /* 
-    * Fill notes section, with additional one for program header,
-    * and one for the core file info defined by NuttX.
+    * stksegs —— stack segments, memsegs —— other memory regions, 
+    * + elf_prpsinfo_t & elf_prstatus_t + VFP registers, + user-defined data
     */
-    elf_emit_hdr(&cinfo, stksegs + memsegs + 1 + 1);
+    elf_emit_hdr(&cinfo, stksegs + memsegs + 1 + 1 + 1);
 
     /* 
     * Fill all the program information about the process for the
@@ -478,9 +512,10 @@ int coredump(const struct memory_region_s *regions)
     {
         elf_emit_memory(&cinfo, memsegs);
     }
-
-    /* Emit core info note */
-
+    /* Emit vfp reg note */ 
+    elf_emit_vfp_note(&cinfo);
+    elf_emit_align(&cinfo);
+    /* Emit core user defined  info note */
     elf_emit_info_note(&cinfo);
 
     /* write the dump */
