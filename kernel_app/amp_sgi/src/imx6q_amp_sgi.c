@@ -31,12 +31,13 @@
 #define MAX_SGI 16
 #define AMP_SGI_SET_COREDUMP_EFD _IOW(SGI_MAGIC, 0x01, int)
 
+#if 0
 struct Sgi_IrqWork
 {
     struct workqueue_struct *amp_sgi_wq;
     struct work_struct amp_sgi_work;
 };
-
+#endif
 struct imx6q_amp_cdev
 {
     dev_t devid;
@@ -51,7 +52,7 @@ struct imx6q_amp_pdata
     struct device *dev;
     int irq;
     int virq_sgi;
-    struct Sgi_IrqWork irq_work;
+    //struct Sgi_IrqWork irq_work;
     struct imx6q_amp_cdev amp_cdev;
 };
 
@@ -133,10 +134,15 @@ static irqreturn_t cpu3_sgi_kick_handle(int irq, void *data)
         return IRQ_NONE;
     }
     dev_info(pdata->dev, "virq sgi %d kick cpu:%d\n",pdata->virq_sgi,cpu);
-    queue_work(pdata->irq_work.amp_sgi_wq,&pdata->irq_work.amp_sgi_work);
+    //queue_work(pdata->irq_work.amp_sgi_wq,&pdata->irq_work.amp_sgi_work);
+    if (pdata->amp_cdev.coredump_efd) {
+        eventfd_signal(pdata->amp_cdev.coredump_efd, 1);
+        dev_info(pdata->dev, "signalled eventfd\n");
+    }
     return IRQ_HANDLED;
 }
 
+#if 0
 static void cpu3_sgi_kick_work_fn(struct work_struct *work)
 {
     struct Sgi_IrqWork *irq_work = container_of(work, struct Sgi_IrqWork, amp_sgi_work);
@@ -147,6 +153,7 @@ static void cpu3_sgi_kick_work_fn(struct work_struct *work)
         dev_info(pdata->dev, "signalled eventfd\n");
     }
 }
+#endif
 
 static const struct file_operations amp_fops=
 {
@@ -288,7 +295,7 @@ err_del_cdev_region:
     unregister_chrdev_region(pcdev->devid,DEVICE_NUM);
     return ret;
 }
-
+#if 0
 static int imx6q_amp_init_irq_wrok(struct platform_device *pdev,struct imx6q_amp_pdata *pdata)
 {
     int ret = 0;
@@ -304,7 +311,7 @@ static int imx6q_amp_init_irq_wrok(struct platform_device *pdev,struct imx6q_amp
     }
     return 0;
 }
-
+#endif
 static int imx6q_amp_probe(struct platform_device *pdev)
 {
     int ret = 0;
@@ -371,6 +378,7 @@ static int imx6q_amp_probe(struct platform_device *pdev)
         ret = -EINVAL;
         goto err_free_irq;
     }
+#if 0
     ret = imx6q_amp_init_irq_wrok(pdev,pdata);
     if(ret)
     {
@@ -378,13 +386,16 @@ static int imx6q_amp_probe(struct platform_device *pdev)
         ret = -EINVAL;
         goto err_free_cdev;
     }
+#endif
     platform_set_drvdata(pdev, pdata);
     return 0;
+#if 0
 err_free_cdev:
     device_unregister(pdata->amp_cdev.amp_dev);
     class_destroy(pdata->amp_cdev.amp_class);
     cdev_del(&pdata->amp_cdev.cdev);
     unregister_chrdev_region(pdata->amp_cdev.devid,DEVICE_NUM);
+#endif
 err_free_irq:
     if(irq < MAX_SGI)
     {
@@ -401,7 +412,7 @@ static void imx6q_amp_remove(struct platform_device *pdev)
     class_destroy(pdata->amp_cdev.amp_class);
     cdev_del(&pdata->amp_cdev.cdev);
     unregister_chrdev_region(pdata->amp_cdev.devid,DEVICE_NUM);
-    destroy_workqueue(pdata->irq_work.amp_sgi_wq);
+    //destroy_workqueue(pdata->irq_work.amp_sgi_wq);
     if(pdata->irq < MAX_SGI)
     {
         imx6q_cleanup_sgi(pdata);
