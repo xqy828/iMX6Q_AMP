@@ -2100,10 +2100,20 @@
             clocks = <&clks IMX6QDL_CLK_OCRAM>;
         };
     };
+    reserved-memory {
+        #address-cells = <1>;
+        #size-cells = <1>;
+        ranges;
+        cpu3: imx6q_amp@8EC00000 {
+            reg = <0x8EC00000 0x01400000>;
+            no-map;
+        };
+    };
+
     imx6q_amp{
         compatible = "nxp,imx6q-amp";
         interrupt-parent = <&intc>;
-		nxp,sgi-intid = <15>;
+        nxp,sgi-intid = <15>;
     };
 };
 #include "reboot.dtsi"

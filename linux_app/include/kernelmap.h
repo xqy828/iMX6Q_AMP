@@ -33,7 +33,7 @@
 #define HW_SRC_GPR8_TOG(v)    (HW_SRC_GPR8_WR(HW_SRC_GPR8_RD() ^  (v)))
 
 
-#define CPU3APP_PHY_BASE   (0x78000000)
+#define CPU3APP_PHY_BASE   (0x8EC00000)
 
 
 

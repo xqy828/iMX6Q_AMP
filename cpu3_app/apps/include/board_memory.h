@@ -9,9 +9,9 @@
  * External DDR
  */
 // mx6dq and mx6sdl DDR memory starts at this address
-#define DDR_ORG 0x78000000
+#define DDR_ORG 0x8EC00000
 
-#define DDR_LEN (128 * 1024 * 1024) //128M
+#define DDR_LEN (20 * 1024 * 1024) //20M
 
 // Maximum size of the signed image
 #define MAX_IMAGE_SIZE 10M
@@ -20,11 +20,11 @@
 #define MAX_HAB_CSF_DATA_SIZE 8K
 
 // Size of stacks section
-#define HEAP_SIZE 16M
+#define HEAP_SIZE 1M
 
 #define SYSTEM_STACK_SIZE           2048
 #define ABORT_STACK_SIZE            2048
-#define SUPERVISOR_STACK_SIZE       0xA00000
+#define SUPERVISOR_STACK_SIZE       (1 * 1024 *1024)
 #define IRQ_STACK_SIZE              2048
 #define FIQ_STACK_SIZE              2048
 #define UNDEF_STACK_SIZE            2048
